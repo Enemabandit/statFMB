@@ -1,0 +1,158 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}
+    Estatísticas FMB
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Fundação Mata do Bussaco</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Estatísticas</a></li>
+            <li><a href="#about">Carregar</a></li>
+            <li><a href="#about">Exportar</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+{% endblock%}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <br>
+        <h1>
+            Estatísticas
+            <small class="text-muted">Fundação Mata do Bussaco</small>
+        </h1>
+    </div>
+    <form class="form-inline">
+    </form>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-6 col-md-3" align="right">
+                <h4><b>Numero de Veiculos:</b></h4>
+                <h4><b>Numero de Visitantes:</b></h4>
+                <br>
+                <div class="dropdown">
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        Selecionar Porta
+                        <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                            <li><a href="#">Action</a></li>
+                            <li><a href="#">Another action</a></li>
+                            <li><a href="#">Something else here</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#">Separated link</a></li>
+                            </ul>
+                </div>
+            </div>
+            <div class="col-xs-6 col-md-3">
+                <h4> SOME NUMBER</h4>
+                <h4> SOME NUMBER</h4>
+                <br>
+                <button type="button" class="btn btn-primary">Pesquisar</button>
+            </div>
+            <div class="col-xs-6 col-md-3">
+                <div class="form-group row">
+                    <label for="example-date-input" class="col-md-10 col-form-label">Data de inicio:</label>
+                    <div class="col-md-10">
+                        <input class="form-control" type="date" value="2011-08-19" id="example-date-input">
+                    </div>
+                    <label for="example-date-input" class="col-md-10 col-form-label">Data de fim:</label>
+                    <div class="col-md-10">
+                        <input class="form-control" type="date" value="2011-08-19" id="example-date-input">
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-6 col-md-3" >
+                <p><b>Ajuda:</b></p>
+                <p>ola mundo</p>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-striped">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th>#</th>
+                            <th>Ligeiros</th>
+                            <th>Ligeiros >5</th>
+                            <th>Caravanas</th>
+                            <th>Autocarros</th>
+                            <th>Motos</th>
+                            <th>Bicicleta</th>
+                            <th>Peões</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">1</th>
+                            <th>20</th>
+                            <th>9</th>
+                            <th>2</th>
+                            <th>1</th>
+                            <th>323</th>
+                            <th>11</th>
+                            <th>659</th>
+                        </tr>
+                        <tr>
+                            <th scope="row">2</th>
+                            <th>20</th>
+                            <th>9</th>
+                            <th>2</th>
+                            <th>1</th>
+                            <th>323</th>
+                            <th>11</th>
+                            <th>659</th>
+                        </tr>
+                        <tr class="table-active">
+                            <th scope="row">T</th>
+                            <th>20</th>
+                            <th>9</th>
+                            <th>2</th>
+                            <th>1</th>
+                            <th>323</th>
+                            <th>11</th>
+                            <th>659</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <ul><h4><b>Top Paises</b></h4></ul>
+                <li><b>1.</b> Portugal</li>
+                <li><b>2.</b> Inglaterra</li>
+                <li><b>3.</b></li>
+                <li><b>4.</b></li>
+                <li><b>5.</b></li>
+            </div>
+            <div class="col-md-6">
+                <ul><h4><b>Top Concelhos</b></h4></ul>
+                <li><b>1.</b> Portugal</li>
+                <li><b>2.</b> Inglaterra</li>
+                <li><b>3.</b></li>
+                <li><b>4.</b></li>
+                <li><b>5.</b></li>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

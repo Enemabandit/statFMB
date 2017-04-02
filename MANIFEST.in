@@ -1,0 +1,5 @@
+graft instance/config.py
+graft statFMB/static
+graft statFMB/templates
+include models.py
+include statFMB.py

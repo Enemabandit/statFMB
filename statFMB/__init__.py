@@ -1,0 +1,1 @@
+from .statFMB import app
