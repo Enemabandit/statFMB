@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from .statFMB import app
+from statFMB import app
 
 #app = Flask(__name__)
 ### this was added to solve a deprecation warning

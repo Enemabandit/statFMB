@@ -1,10 +1,68 @@
 from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+
+app=Flask(__name__)
+### this was added to solve a deprecation warning
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI']= 'mysql://statFMB:statFMB@localhost/test'
+app.config['SECRET_KEY'] = 'DontTellAnyone'
+app.config['DEBUG'] = True
+#app = Flask(__name__, instance_relative_config=True)
+#app.config.from_object('config')
+#app.config.from_pyfile('config.py')
+
+#### models creation
+db = SQLAlchemy(app)
+
+class Entrances(db.Model):
+    __tablename__ = 'entrances'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
+    n_persons = db.Column(db.Integer)
+    ###ForeignKeys
+    entrance_type_id = db.Column(db.Integer,db.ForeignKey('entrance_types.id'))
+    entrance_type = db.relationship("Entrance_types")
+    gate_id = db.Column(db.Integer,db.ForeignKey('gates.id'))
+    gate = db.relationship("Gates")
+    country_id = db.Column(db.Integer,db.ForeignKey('countries.id'))
+    country = db.relationship("Countries")
+    municipality_id = db.Column(db.Integer,db.ForeignKey('municipalities.id'))
+    municipality = db.relationship("Municipalities")
+
+class Entrance_types(db.Model):
+    __tablename__ = 'entrance_types'
+    id = db.Column(db.Integer, primary_key=True)
+    entrance_type = db.Column(db.String(20))
+
+class Gates(db.Model):
+    __tablename__ = 'gates'
+    id = db.Column(db.Integer, primary_key=True)
+    gate = db.Column(db.String(20))
+
+class Countries(db.Model):
+    __tablename__ = 'countries'
+    id = db.Column(db.Integer, primary_key=True)
+    country = db.Column(db.String(50))
+
+class Municipalities(db.Model):
+    __tablename__ = 'municipalities'
+    id = db.Column(db.Integer, primary_key=True)
+    municipality = db.Column(db.String(50))
+############
+
+###Website structure
+from flask_wtf import Form
+from wtforms import DateField, StringField
 from flask_bootstrap import Bootstrap
 
-app = Flask(__name__)
 Bootstrap(app)
 
+class searchForm(Form):
+    lower_date = DateField('Data Inicio', format='%d/%m/%Y')
+    upper_date = DateField('Data Fim', format='%d/%m/%Y')
+    gate = StringField('Porta')
 
 @app.route('/',methods=['GET','POST'])
 def index():
-    return render_template("index.html")
+    form = searchForm()
+    return render_template("index.html", form=form)
