@@ -1,4 +1,5 @@
 from .statFMB import db, gate_to_string
+from collections import Counter
 
 class Entrances(db.Model):
     __tablename__ = 'entrances'
@@ -49,7 +50,6 @@ class Entrances(db.Model):
     #returns a dictionary ordered by top gate with the related gate entrances
     #NOTE:get_top_x() returns the number of persons for each x
     #TODO:think about a solution to show get_top_x() for persons and vehicles
-    #TODO:change dictionaries to counters
     #TODO:limit size of get_top_x() returns
     def get_top_gates():
         top_gates = {"Ameias": 0, "Serpa": 0, "Rainha": 0}
@@ -58,27 +58,19 @@ class Entrances(db.Model):
         return sort_dict(top_gates)
 
     def get_top_countries():
-        top_countries = {}
+        top_countries = Counter()
         for entrance in Entrances.searched_list:
             current_country_id = entrance.country_id
-            if current_country_id in top_countries:
-                top_countries[current_country_id] += entrance.n_persons
-            else:
-                top_countries[current_country_id] = entrance.n_persons
-
-        return sort_dict(top_countries)
+            top_countries[current_country_id] += entrance.n_persons
+        return top_countries.most_common(5)
 
     def get_top_municipalities():
-        top_municipalities = {}
+        top_municipalities = Counter()
         for entrance in Entrances.searched_list:
             if entrance.country_id == 1:
                 current_m_id = entrance.municipality_id
-                if current_m_id in top_municipalities:
-                    top_municipalities[current_m_id] += entrance.n_persons
-                else:
-                    top_municipalities[current_m_id] = entrance.n_persons
-
-        return sort_dict(top_municipalities)
+                top_municipalities[current_m_id] += entrance.n_persons
+        return top_municipalities.most_common(5)
 
 
     def get_sum_vehicles():
