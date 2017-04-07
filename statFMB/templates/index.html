@@ -66,8 +66,7 @@
               </div>
               <div class="form-group">
                   <label for="data_fim">Porta</label>
-                  <select class="form-control" name="gate"
-                          value={{ gate }}>
+                  <select class="form-control" name="gate">
                       <option value="4">Todas</option>
                       <option value="1">Ameias</option>
                       <option value="2">Serpa</option>
@@ -181,7 +180,7 @@
                               <h4>Top Portas</h4>
                           </li>
                           {% if top_gates %}
-                             {% for key, value in top_gates.items()  %}
+                             {% for key, value in top_gates.items() %}
                                 <li class="list-group-item">
                                     <span class="badge">{{ value }}</span>
                                     {{ key }}
@@ -195,26 +194,14 @@
                           <li class="list-group-item list-group-item-info">
                               <h4>Top Paises</h4>
                           </li>
-                          <li class="list-group-item">
-                              <span class="badge">3451</span>
-                              Portugal
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">1234</span>
-                              Espanha
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">432</span>
-                              França
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">10</span>
-                              Israel
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">1</span>
-                              cuxixina
-                          </li>
+                          {% if top_countries %}
+                             {% for key, value in top_countries.items() %}
+                                <li class="list-group-item">
+                                    <span class="badge">{{ value }}</span>
+                                    {{ key }}
+                                </li>
+                             {% endfor %}
+                          {% endif %}
                       </ul>
                   </div>
                   <div class="col-md-3">
@@ -222,26 +209,14 @@
                           <li class="list-group-item list-group-item-info">
                               <h4>Top Concelhos</h4>
                           </li>
-                          <li class="list-group-item">
-                              <span class="badge">5432</span>
-                              Lisboa
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">2349</span>
-                              Porto
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">100</span>
-                              Aveiro
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">25</span>
-                              Viseu
-                          </li>
-                          <li class="list-group-item">
-                              <span class="badge">1</span>
-                              Leiria
-                          </li>
+                          {% if top_municipalities %}
+                             {% for key, value in top_municipalities.items() %}
+                                <li class="list-group-item">
+                                    <span class="badge">{{ value }}</span>
+                                    {{ key }}
+                                </li>
+                             {% endfor %}
+                          {% endif %}
                       </ul>
                   </div>
               </div>

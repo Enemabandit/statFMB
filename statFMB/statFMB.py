@@ -47,6 +47,8 @@ def index():
             sum_pedestrians = Entrances.get_sum_pedestrians()
 
             top_gates = Entrances.get_top_gates()
+            top_countries = Entrances.get_top_countries()
+            top_municipalities = Entrances.get_top_municipalities()
 
             return render_template("index.html",
                                    date_warning = False,
@@ -56,8 +58,11 @@ def index():
                                    sum_vehicles = sum_vehicles,
                                    sum_passengers = sum_passengers,
                                    sum_pedestrians = sum_pedestrians,
-                                   top_gates = top_gates)
+                                   top_gates = top_gates,
+                                   top_countries = top_countries,
+                                   top_municipalities = top_municipalities)
 
+    ###default route(/)
     #TODO: set lower_date to inauguration date
     lower_date = date(2000,1,1)
     upper_date = date.today()

@@ -45,18 +45,41 @@ class Entrances(db.Model):
                                        .filter(Entrances.gate_id == int(gate))
                                        .all())
 
+    ###GET FUNCTIONS
     #returns a dictionary ordered by top gate with the related gate entrances
+    #NOTE:get_top_x() returns the number of persons for each x
+    #TODO:think about a solution to show get_top_x() for persons and vehicles
+    #TODO:change dictionaries to counters
+    #TODO:limit size of get_top_x() returns
     def get_top_gates():
         top_gates = {"Ameias": 0, "Serpa": 0, "Rainha": 0}
         for entrance in Entrances.searched_list:
-            top_gates[gate_to_string(entrance.gate_id)] += 1
+            top_gates[gate_to_string(entrance.gate_id)] += entrance.n_persons
+        return sort_dict(top_gates)
 
-        sorted_top_gates = {}
-        for key, value in sorted(top_gates.items(),
-                                 key = lambda t: t[1],
-                                 reverse = True):
-            sorted_top_gates[key] = value
-        return sorted_top_gates
+    def get_top_countries():
+        top_countries = {}
+        for entrance in Entrances.searched_list:
+            current_country_id = entrance.country_id
+            if current_country_id in top_countries:
+                top_countries[current_country_id] += entrance.n_persons
+            else:
+                top_countries[current_country_id] = entrance.n_persons
+
+        return sort_dict(top_countries)
+
+    def get_top_municipalities():
+        top_municipalities = {}
+        for entrance in Entrances.searched_list:
+            if entrance.country_id == 1:
+                current_m_id = entrance.municipality_id
+                if current_m_id in top_municipalities:
+                    top_municipalities[current_m_id] += entrance.n_persons
+                else:
+                    top_municipalities[current_m_id] = entrance.n_persons
+
+        return sort_dict(top_municipalities)
+
 
     def get_sum_vehicles():
         sum_vehicles = 0
@@ -79,6 +102,7 @@ class Entrances(db.Model):
                 sum_pedestrians += entrance.n_persons
         return sum_pedestrians
 
+    ###
 
 
 class Entrance_types(db.Model):
@@ -104,3 +128,16 @@ class Municipalities(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     municipality = db.Column(db.String(50))
 
+
+#returns a dictionary sorted by value, from an unsorted dictionary
+#returns none if argument type != dictionary
+def sort_dict(d):
+    if type(d) == dict:
+        sorted_d = {}
+        for key, value in sorted(d.items(),
+                                 key = lambda t: t[1],
+                                 reverse = True):
+            sorted_d[key] = value
+        return sorted_d
+    else:
+        return
