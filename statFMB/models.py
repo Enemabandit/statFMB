@@ -1,4 +1,4 @@
-from .statFMB import db
+from .statFMB import db, gate_to_string
 
 class Entrances(db.Model):
     __tablename__ = 'entrances'
@@ -44,6 +44,19 @@ class Entrances(db.Model):
                                        .filter(Entrances.date <= upper_date)
                                        .filter(Entrances.gate_id == int(gate))
                                        .all())
+
+    #returns a dictionary ordered by top gate with the related gate entrances
+    def get_top_gates():
+        top_gates = {"Ameias": 0, "Serpa": 0, "Rainha": 0}
+        for entrance in Entrances.searched_list:
+            top_gates[gate_to_string(entrance.gate_id)] += 1
+
+        sorted_top_gates = {}
+        for key, value in sorted(top_gates.items(),
+                                 key = lambda t: t[1],
+                                 reverse = True):
+            sorted_top_gates[key] = value
+        return sorted_top_gates
 
     def get_sum_vehicles():
         sum_vehicles = 0

@@ -13,6 +13,14 @@ app.config['DEBUG'] = True
 db = SQLAlchemy(app)
 session = db.session.connection()
 
+def gate_to_string(gate):
+    return{
+        1:"Ameias",
+        2:"Serpa",
+        3:"Rainha",
+        4:"Todas",
+    }.get(int(gate))
+
 #models.py imports db, needs to be imported after db creation
 from .models import *
 
@@ -38,6 +46,8 @@ def index():
             sum_passengers = Entrances.get_sum_passengers()
             sum_pedestrians = Entrances.get_sum_pedestrians()
 
+            top_gates = Entrances.get_top_gates()
+
             return render_template("index.html",
                                    date_warning = False,
                                    upper_date = upper_date,
@@ -45,7 +55,8 @@ def index():
                                    gate = gate_to_string(gate),
                                    sum_vehicles = sum_vehicles,
                                    sum_passengers = sum_passengers,
-                                   sum_pedestrians = sum_pedestrians)
+                                   sum_pedestrians = sum_pedestrians,
+                                   top_gates = top_gates)
 
     #TODO: set lower_date to inauguration date
     lower_date = date(2000,1,1)
@@ -54,11 +65,3 @@ def index():
                            date_warning = False,
                            upper_date = upper_date,
                            lower_date = lower_date)
-
-def gate_to_string(gate):
-    return{
-        "1":"Ameias",
-        "2":"Serpa",
-        "3":"Rainha",
-        "4":"Todas",
-    }.get(gate)
