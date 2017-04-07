@@ -1,4 +1,4 @@
-graft instance/config.py
+graft instance/
 graft statFMB/static
 graft statFMB/templates
 include models.py

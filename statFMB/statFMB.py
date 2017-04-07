@@ -1,68 +1,64 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from datetime import date
 
 app=Flask(__name__)
+##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI']= 'mysql://statFMB:statFMB@localhost/test'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
-#app = Flask(__name__, instance_relative_config=True)
-#app.config.from_object('config')
-#app.config.from_pyfile('config.py')
 
-#### models creation
 db = SQLAlchemy(app)
+session = db.session.connection()
 
-class Entrances(db.Model):
-    __tablename__ = 'entrances'
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date)
-    n_persons = db.Column(db.Integer)
-    ###ForeignKeys
-    entrance_type_id = db.Column(db.Integer,db.ForeignKey('entrance_types.id'))
-    entrance_type = db.relationship("Entrance_types")
-    gate_id = db.Column(db.Integer,db.ForeignKey('gates.id'))
-    gate = db.relationship("Gates")
-    country_id = db.Column(db.Integer,db.ForeignKey('countries.id'))
-    country = db.relationship("Countries")
-    municipality_id = db.Column(db.Integer,db.ForeignKey('municipalities.id'))
-    municipality = db.relationship("Municipalities")
-
-class Entrance_types(db.Model):
-    __tablename__ = 'entrance_types'
-    id = db.Column(db.Integer, primary_key=True)
-    entrance_type = db.Column(db.String(20))
-
-class Gates(db.Model):
-    __tablename__ = 'gates'
-    id = db.Column(db.Integer, primary_key=True)
-    gate = db.Column(db.String(20))
-
-class Countries(db.Model):
-    __tablename__ = 'countries'
-    id = db.Column(db.Integer, primary_key=True)
-    country = db.Column(db.String(50))
-
-class Municipalities(db.Model):
-    __tablename__ = 'municipalities'
-    id = db.Column(db.Integer, primary_key=True)
-    municipality = db.Column(db.String(50))
-############
+#models.py imports db, needs to be imported after db creation
+from .models import *
 
 ###Website structure
-from flask_wtf import Form
-from wtforms import DateField, StringField
-from flask_bootstrap import Bootstrap
-
-Bootstrap(app)
-
-class searchForm(Form):
-    lower_date = DateField('Data Inicio', format='%d/%m/%Y')
-    upper_date = DateField('Data Fim', format='%d/%m/%Y')
-    gate = StringField('Porta')
-
 @app.route('/',methods=['GET','POST'])
 def index():
-    form = searchForm()
-    return render_template("index.html", form=form)
+    if request.method == 'POST':
+        lower_date = request.form['lower_date']
+        upper_date = request.form['upper_date']
+        if lower_date > upper_date:
+            date_error = True
+            return render_template("index.html",
+                                   date_warning = True,
+                                   lower_date = date(2001,1,1),
+                                   upper_date = date.today())
+        else:
+            gate = request.form['gate']
+            period = request.form['period']
+
+            Entrances.create_searched_list(lower_date, upper_date,gate)
+
+            sum_vehicles = Entrances.get_sum_vehicles()
+            sum_passengers = Entrances.get_sum_passengers()
+            sum_pedestrians = Entrances.get_sum_pedestrians()
+
+            return render_template("index.html",
+                                   date_warning = False,
+                                   upper_date = upper_date,
+                                   lower_date = lower_date,
+                                   gate = gate_to_string(gate),
+                                   sum_vehicles = sum_vehicles,
+                                   sum_passengers = sum_passengers,
+                                   sum_pedestrians = sum_pedestrians)
+
+    #TODO: set lower_date to inauguration date
+    lower_date = date(2000,1,1)
+    upper_date = date.today()
+    return render_template("index.html",
+                           date_warning = False,
+                           upper_date = upper_date,
+                           lower_date = lower_date)
+
+def gate_to_string(gate):
+    return{
+        "1":"Ameias",
+        "2":"Serpa",
+        "3":"Rainha",
+        "4":"Todas",
+    }.get(gate)
