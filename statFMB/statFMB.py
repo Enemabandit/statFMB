@@ -38,7 +38,8 @@ def index():
                                    upper_date = date.today())
         else:
             gate = request.form['gate']
-            period = request.form['period']
+            #TODO:filter by period of time
+            #period = request.form['period']
 
             Entrances.create_searched_list(lower_date, upper_date,gate)
 
@@ -50,6 +51,9 @@ def index():
             top_countries = Entrances.get_top_countries()
             top_municipalities = Entrances.get_top_municipalities()
 
+            period_list = Entrances.get_period_list()
+            period_list_totals = Entrances.get_period_list_totals()
+
             return render_template("index.html",
                                    date_warning = False,
                                    upper_date = upper_date,
@@ -60,7 +64,10 @@ def index():
                                    sum_pedestrians = sum_pedestrians,
                                    top_gates = top_gates,
                                    top_countries = top_countries,
-                                   top_municipalities = top_municipalities)
+                                   top_municipalities = top_municipalities,
+                                   period_list = period_list,
+                                   period_list_totals = period_list_totals,
+            )
 
     ###default route(/)
     #TODO: set lower_date to inauguration date

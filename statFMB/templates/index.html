@@ -75,7 +75,7 @@
               </div>
               <div class="form-group">
                   <label for="data_fim">Período:</label>
-                  <select class="form-control" name="period">
+                  <select class="form-control" name="period" disabled>
                       <option>Totais</option>
                       <option>Diário</option>
                       <option>Semanal</option>
@@ -115,60 +115,62 @@
                   </div>
               </div>
           </div>
-          <table class="table table-striped table-bordered table-hover">
-              <thead>
-                  <tr class="info">
-                      <th>#</th>
-                      <th>Período</th>
-                      <th>Total</th>
-                      <th>Ligeiros</th>
-                      <th>Ligeiros >5</th>
-                      <th>Caravanas</th>
-                      <th>Autocarros</th>
-                      <th>Motos</th>
-                      <th>Bicicletas</th>
-                      <th>Peões</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <tr>
-                      <td scope="row">1</td>
-                      <td>dd/mm/yy</td>
-                      <td>1231231</td>
-                      <td>20</td>
-                      <td>9</td>
-                      <td>2</td>
-                      <td>1</td>
-                      <td>323</td>
-                      <td>11</td>
-                      <td>659</td>
-                  </tr>
-                  <tr>
-                      <td scope="row">2</th>
-                      <td>dd/mm/yy</td>
-                      <td>1231231</td>
-                      <td>20</th>
-                      <td>9</th>
-                      <td>2</th>
-                      <td>1</th>
-                      <td>323</th>
-                      <td>11</th>
-                      <td>659</th>
-                  </tr>
-                  <tr class="info">
-                      <td scope="row">T</td>
-                      <td>Diário</td>
-                      <td>1231231</td>
-                      <td>20</td>
-                      <td>9</td>
-                      <td>2</td>
-                      <td>1</td>
-                      <td>323</td>
-                      <td>11</td>
-                      <td>659</td>
-                  </tr>
-              </tbody>
-          </table>
+          <div class="container">
+              <div class ="row">
+                  <div class ="col-md-12">
+                      <table class="table table-striped table-bordered
+                                    table-hover">
+                          <thead>
+                              <tr class="info">
+                                  <th>#</th>
+                                  <th>Período</th>
+                                  <th>Viaturas</th>
+                                  <th>Ligeiros</th>
+                                  <th>Ligeiros >5</th>
+                                  <th>Caravanas</th>
+                                  <th>Autocarros</th>
+                                  <th>Motos</th>
+                                  <th>Bicicletas</th>
+                                  <th>Passageiros</th>
+                                  <th>Peões</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for period in period_list %}
+                              <tr>
+                                  <td scope="row"></td>
+                                  <td>{{ period }}</td>
+                                  <td>{{ period_list[period][10] }}</td>
+                                  <td>{{ period_list[period][4] }}</td>
+                                  <td>{{ period_list[period][5] }}</td>
+                                  <td>{{ period_list[period][6] }}</td>
+                                  <td>{{ period_list[period][7] }}</td>
+                                  <td>{{ period_list[period][3] }}</td>
+                                  <td>{{ period_list[period][2] }}</td>
+                                  <td>{{ period_list[period][9] }}</td>
+                                  <td>{{ period_list[period][1] }}</td>
+                              </tr>
+                              {% endfor %}
+                              {% if period_list_totals %}
+                              <tr class="info">
+                                  <td scope="row">T</td>
+                                  <td>Diário</td>
+                                  <td>{{ period_list_totals[10] }}</td>
+                                  <td>{{ period_list_totals[4] }}</td>
+                                  <td>{{ period_list_totals[5] }}</td>
+                                  <td>{{ period_list_totals[6] }}</td>
+                                  <td>{{ period_list_totals[7] }}</td>
+                                  <td>{{ period_list_totals[3] }}</td>
+                                  <td>{{ period_list_totals[2] }}</td>
+                                  <td>{{ period_list_totals[9] }}</td>
+                                  <td>{{ period_list_totals[1] }}</td>
+                              </tr>
+                              {% endif %}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
           <br>
           <div class="container">
               <div class="row">
@@ -197,8 +199,8 @@
                           {% if top_countries %}
                              {% for entry in top_countries %}
                                 <li class="list-group-item">
-                                    <span class="badge">{{ entry[0] }}</span>
-                                    {{ entry[1] }}
+                                    <span class="badge">{{ entry[1] }}</span>
+                                    {{ entry[0] }}
                                 </li>
                              {% endfor %}
                           {% endif %}
@@ -212,8 +214,8 @@
                           {% if top_municipalities %}
                              {% for entry in top_municipalities%}
                                 <li class="list-group-item">
-                                    <span class="badge">{{ entry[0] }}</span>
-                                    {{ entry[1] }}
+                                    <span class="badge">{{ entry[1] }}</span>
+                                    {{ entry[0] }}
                                 </li>
                              {% endfor %}
                           {% endif %}
