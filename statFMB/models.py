@@ -127,13 +127,11 @@ class Entrances(db.Model):
 
     def get_period_list_totals():
         totals = Counter()
-
         for period in Entrances.period_list:
             if totals != 0:
                 totals += Entrances.period_list[period]
             else:
                 totals = Entrances.period_list[period]
-
         print (totals)
         return totals
 
