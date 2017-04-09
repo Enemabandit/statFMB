@@ -25,8 +25,12 @@ class Entrances(db.Model):
     period_list = OrderedDict()
 
     ### Constructor for Entrances objects
-    def __init__(self,id,date,n_persons,entrance_type_id,gate_id,
-                 country_id,municipality_id):
+    def __init__(self,id,date,
+                 entrance_type_id,
+                 gate_id,
+                 n_persons = 0,
+                 country_id = 1,
+                 municipality_id = 999):
         self.id = id
         self.date = date
         self.n_persons = n_persons
@@ -35,10 +39,16 @@ class Entrances(db.Model):
         self.country = country
         self.municipality_id = municipality_id
 
+    def __repr__():
+        pass
+    def __str__():
+        pass
+
     #initializes the seached_list with all entrances filtered by the user input
-    def create_searched_list(lower_date, upper_date, gate):
+    @classmethod
+    def create_searched_list(cls,lower_date, upper_date, gate):
         if  int(gate) == 4:
-            Entrances.searched_list = (Entrances.query
+            Entrances.searched_list = (cls.query
                                        .join(Gates)
                                        .join(Countries)
                                        .join(Municipalities)
@@ -47,7 +57,7 @@ class Entrances(db.Model):
                                        .filter(Entrances.date <= upper_date)
                                        .all())
         else:
-            Entrances.searched_list = (Entrances.query
+            Entrances.searched_list = (cls.query
                                        .join(Gates)
                                        .join(Countries)
                                        .join(Municipalities)
@@ -62,22 +72,25 @@ class Entrances(db.Model):
     #NOTE:get_top_x() returns the number of persons for each x
     #TODO:think about a solution to show get_top_x() for persons and vehicles
     #TODO:limit size of get_top_x() returns
-    def get_top_gates():
+    @classmethod
+    def get_top_gates(cls):
         top_gates = {"Ameias": 0, "Serpa": 0, "Rainha": 0}
-        for entrance in Entrances.searched_list:
+        for entrance in cls.searched_list:
             top_gates[gate_to_string(entrance.gate_id)] += entrance.n_persons
         return sort_dict(top_gates)
 
-    def get_top_countries():
+    @classmethod
+    def get_top_countries(cls):
         top_countries = Counter()
-        for entrance in Entrances.searched_list:
+        for entrance in cls.searched_list:
             current_country = entrance.country.country
             top_countries[current_country] += entrance.n_persons
         return top_countries.most_common(5)
 
-    def get_top_municipalities():
+    @classmethod
+    def get_top_municipalities(cls):
         top_municipalities = Counter()
-        for entrance in Entrances.searched_list:
+        for entrance in cls.searched_list:
             if entrance.country_id == 1:
                 current_m = entrance.municipality.municipality
                 top_municipalities[current_m] += entrance.n_persons
@@ -96,11 +109,13 @@ class Entrances(db.Model):
     #
     #TODO:default show results by day, implement period option
     #TODO:implement pagination
-    def get_period_list():
+    #TODO:think about turning Counter of Counters in instances of Entrances
+    @classmethod
+    def get_period_list(cls):
         period_entry = Counter()
         period_list = Counter()
 
-        for entrance in Entrances.searched_list:
+        for entrance in cls.searched_list:
             if entrance.entrance_type_id not in (1,2):
                 add_entrance = Counter()
                 add_entrance[entrance.entrance_type_id] = 1
@@ -122,40 +137,44 @@ class Entrances(db.Model):
         sorted_list = OrderedDict(sorted(period_list.items(),
                                          key=lambda t: t[0],
                                          reverse = True))
-        Entrances.period_list = sorted_list
+        cls.period_list = sorted_list
         return sorted_list
 
-    def get_period_list_totals():
+    @classmethod
+    def get_period_list_totals(cls):
         totals = Counter()
-        for period in Entrances.period_list:
+        for period in cls.period_list:
             if totals != 0:
-                totals += Entrances.period_list[period]
+                totals += cls.period_list[period]
             else:
-                totals = Entrances.period_list[period]
+                totals = cls.period_list[period]
         print (totals)
         return totals
 
 
     #TODO: bicicles counting as vehicles, solve this
-    def get_sum_vehicles():
+    @classmethod
+    def get_sum_vehicles(cls):
         sum_vehicles = 0
-        for entrance in Entrances.searched_list:
+        for entrance in cls.searched_list:
             if entrance.entrance_type_id != 1:
                 sum_vehicles += 1
         return sum_vehicles
 
     #TODO: bicicles counting as vehicles,solve this
-    def get_sum_passengers():
+    @classmethod
+    def get_sum_passengers(cls):
         sum_passengers = 0
-        for entrance in Entrances.searched_list:
+        for entrance in cls.searched_list:
             if entrance.entrance_type_id != 1:
                 sum_passengers += entrance.n_persons
         return sum_passengers
 
     #TODO: think about where to put biciles
-    def get_sum_pedestrians():
+    @classmethod
+    def get_sum_pedestrians(cls):
         sum_pedestrians = 0
-        for entrance in Entrances.searched_list:
+        for entrance in cls.searched_list:
             if entrance.entrance_type_id == 1:
                 sum_pedestrians += entrance.n_persons
         return sum_pedestrians
@@ -188,48 +207,6 @@ class Municipalities(db.Model):
 
 ###END OF DB.MODELS
 
-#class that represents a period of time to be represented in the detailed table
-'''
-class Period():
-    def __init__(self,id):
-        self.id = id
-        self.vehicles = 0
-        self.cars = 0
-        self.big_cars = 0
-        self.caravans = 0
-        self.buses = 0
-        self.bikes = 0
-        self.bicicles = 0
-        self.pawns = 0
-
-    def add_car(n = 1):
-        self.cars += n
-        self.vehicles += n
-
-    def add_big_car(n = 1):
-        self.big_cars += n
-        self.vehicles += n
-
-    def add_caravan(n = 1):
-        self.caravans += n
-        self.vehicles += n
-
-    def add_bus(n = 1):
-        self.busses += n
-        self.vehicles += n
-
-    def add_bike(n = 1):
-        self.bike += n
-        self.vehicles += n
-
-    def add_bicicle(n = 1):
-        self.bicicle += n
-
-    def add_pawns(n):
-        self.pawns += n
-'''
-
-
 #returns a dictionary sorted by value, from an unsorted dictionary
 #returns none if argument type != dictionary
 def sort_dict(d):
@@ -241,4 +218,4 @@ def sort_dict(d):
             sorted_d[key] = value
         return sorted_d
     else:
-        return
+        return None
