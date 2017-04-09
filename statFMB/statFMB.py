@@ -6,12 +6,12 @@ app=Flask(__name__)
 ##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI']= 'mysql://statFMB:statFMB@localhost/test'
+app.config['SQLALCHEMY_DATABASE_URI']= 'mysql://statFMB:statFMB@localhost/test_1'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
 
-db = SQLAlchemy(app)
-session = db.session.connection()
+#db = SQLAlchemy(app)
+#session = db.session.connection()
 
 def gate_to_string(gate):
     return{

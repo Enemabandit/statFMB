@@ -1,28 +1,40 @@
-from .statFMB import db, gate_to_string
-from collections import Counter, OrderedDict
+from .statFMB import app
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+#from collections import Counter, OrderedDict
 
-class Entrances(db.Model):
+
+db = SQLAlchemy(app)
+
+class Report(db.Model):
+    __tablename__ = 'reports'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    vehicles = db.Column(db.Integer)
+    pawns = db.Column(db.Integer)
+    bicicles = db.Column(db.Integer)
+    gate_id = db.Column(db.Integer, db.ForeignKey('gates.id'))
+    shift_id = db.Column(db.Integer, db.ForeignKey('shifts.id'))
+
+    entrance = db.relationship("Entrance", backref="report", lazy="dynamic")
+
+class Shift(db.Model):
+    __tablename__ = "shifts"
+    id = db.Column(db.Integer, primary_key = True)
+    duration = db.Column(db.String(20), nullable=False)
+
+    report = db.relationship("Report", backref="shift", lazy="dynamic")
+
+#TODO: set @classmethods
+class Entrance(db.Model):
     __tablename__ = 'entrances'
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date)
     n_persons = db.Column(db.Integer)
 
-    #ForeignKeys and relationships
-    entrance_type_id = db.Column(db.Integer,db.ForeignKey('entrance_types.id'))
-    entrance_type = db.relationship("Entrance_types")
-    gate_id = db.Column(db.Integer,db.ForeignKey('gates.id'))
-    gate = db.relationship("Gates")
-    country_id = db.Column(db.Integer,db.ForeignKey('countries.id'))
-    country = db.relationship("Countries")
-    municipality_id = db.Column(db.Integer,db.ForeignKey('municipalities.id'))
-    municipality = db.relationship("Municipalities")
-
-    #contains the entrances list filtered by date and gate
-    #TODO:initialize searched list on methods when it is not initialized
-    searched_list = []
-
-    #contains the entrances in period groups
-    period_list = OrderedDict()
+    report_id = db.Column(db.Integer, db.ForeignKey('reports.id'))
+    vehicle_type_id = db.Column(db.Integer, db.ForeignKey('vehicle_types.id'))
+    country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
+    municipality_id = db.Column(db.Integer, db.ForeignKey('municipalities.id'))
 
     ### Constructor for Entrances objects
     def __init__(self,id,date,n_persons,entrance_type_id,gate_id,
@@ -162,72 +174,62 @@ class Entrances(db.Model):
 
     ###
 
-
-class Entrance_types(db.Model):
-    __tablename__ = 'entrance_types'
+class Vehicle_type(db.Model):
+    __tablename__ = 'vehicle_types'
     id = db.Column(db.Integer, primary_key=True)
-    entrance_type = db.Column(db.String(20))
+    vehicle_type = db.Column(db.String(20), nullable=False)
+    entrance = db.relationship("Entrance", backref="vehicle_type",
+                               lazy="dynamic")
 
 
-class Gates(db.Model):
+class Gate(db.Model):
     __tablename__ = 'gates'
     id = db.Column(db.Integer, primary_key=True)
-    gate = db.Column(db.String(20))
+    gate = db.Column(db.String(20), nullable=False)
+    report = db.relationship("Report", backref="gate", lazy="dynamic")
 
 
-class Countries(db.Model):
+class Country(db.Model):
     __tablename__ = 'countries'
     id = db.Column(db.Integer, primary_key=True)
-    country = db.Column(db.String(50))
+    country = db.Column(db.String(50), nullable=False)
+    report = db.relationship("Report", backref="country", lazy="dynamic")
+    alias = db.relationship("Country_alias", backref="country", lazy="dynamic")
 
+class Country_alias(db.Model):
+    __tablename__ = 'country_alias'
+    id = db.Column(db.Integer, primary_key=True)
+    alias = db.Column(db.String(50), nullable=False)
+    country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
 
-class Municipalities(db.Model):
+class Municipality(db.Model):
     __tablename__ = 'municipalities'
     id = db.Column(db.Integer, primary_key=True)
-    municipality = db.Column(db.String(50))
+    municipality = db.Column(db.String(50), nullable=False)
+    report = db.relationship("Report", backref="municipality", lazy="dynamic")
+    alias = db.relationship("Municipality_alias", backref="municipality",
+                            lazy="dynamic")
+
+
+class Municipality_alias(db.Model):
+    __tablename__ = 'municipality_alias'
+    id = db.Column(db.Integer, primary_key=True)
+    alias = db.Column(db.String(50), nullable=False)
+    municipality_id = db.Column(db.Integer, db.ForeignKey('municipalities.id'))
 
 ###END OF DB.MODELS
 
-#class that represents a period of time to be represented in the detailed table
-'''
-class Period():
-    def __init__(self,id):
-        self.id = id
-        self.vehicles = 0
-        self.cars = 0
-        self.big_cars = 0
-        self.caravans = 0
-        self.buses = 0
-        self.bikes = 0
-        self.bicicles = 0
-        self.pawns = 0
+class Period:
+    #date_range
+    #gate
+    #total_vehicles
+    #total_persons = n_passengers + n_pawns
+    #n_passangers
+    #vehicle_list
+    #n_bicicles
+    #n_pawns
 
-    def add_car(n = 1):
-        self.cars += n
-        self.vehicles += n
-
-    def add_big_car(n = 1):
-        self.big_cars += n
-        self.vehicles += n
-
-    def add_caravan(n = 1):
-        self.caravans += n
-        self.vehicles += n
-
-    def add_bus(n = 1):
-        self.busses += n
-        self.vehicles += n
-
-    def add_bike(n = 1):
-        self.bike += n
-        self.vehicles += n
-
-    def add_bicicle(n = 1):
-        self.bicicle += n
-
-    def add_pawns(n):
-        self.pawns += n
-'''
+    pass
 
 
 #returns a dictionary sorted by value, from an unsorted dictionary
@@ -242,3 +244,5 @@ def sort_dict(d):
         return sorted_d
     else:
         return
+
+#db.create_all()
