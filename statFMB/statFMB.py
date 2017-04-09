@@ -2,8 +2,6 @@ from flask import Flask, render_template, request, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
 
-#TODO:create an administration route with login to override file upload, etc.
-
 app=Flask(__name__)
 ##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
@@ -13,8 +11,8 @@ app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
 
 db = SQLAlchemy(app)
+session = db.session.connection()
 
-#TODO: this doesnt belong here
 def gate_to_string(gate):
     return{
         1:"Ameias",
@@ -90,13 +88,10 @@ def charts():
     return redirect("/")
 
 
+#TODO: don't let files be uploaded more than once
 @app.route('/upload',methods=['GET','POST'])
 def upload():
     from .upload import update_database
-
-    #NOTE:this does not work, objective is to show upload.html template
-    #     while updating database
-    #render_template("upload.html")
 
     if request.method == 'POST' and 'file[]' in request.files:
         uploaded_files = request.files.getlist("file[]")
