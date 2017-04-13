@@ -6,20 +6,11 @@ app=Flask(__name__)
 ##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI']= 'mysql://statFMB:statFMB@localhost/test_1'
+app.config['SQLALCHEMY_DATABASE_URI']= 'mysql://statFMB:statFMB@localhost/test1'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
 
-#db = SQLAlchemy(app)
-#session = db.session.connection()
-
-def gate_to_string(gate):
-    return{
-        1:"Ameias",
-        2:"Serpa",
-        3:"Rainha",
-        4:"Todas",
-    }.get(int(gate))
+db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
 from .models import *
@@ -42,41 +33,48 @@ def index():
 
 
         gate = request.form['gate']
-        #TODO:filter by period of time
-        #period = request.form['period']
+        period = request.form['period']
 
-        Entrances.create_searched_list(lower_date, upper_date,gate)
+        Report.create_search_list(lower_date, upper_date,gate)
 
-        sum_vehicles = Entrances.get_sum_vehicles()
-        sum_passengers = Entrances.get_sum_passengers()
-        sum_pedestrians = Entrances.get_sum_pedestrians()
+        print(Report.search_list)
 
-        top_gates = Entrances.get_top_gates()
-        top_countries = Entrances.get_top_countries()
-        top_municipalities = Entrances.get_top_municipalities()
+        #sum_vehicles = Entrances.get_sum_vehicles()
+        #sum_passengers = Entrances.get_sum_passengers()
+        #sum_pedestrians = Entrances.get_sum_pedestrians()
 
-        period_list = Entrances.get_period_list()
-        period_list_totals = Entrances.get_period_list_totals()
+        #top_gates = Entrances.get_top_gates()
+        #top_countries = Entrances.get_top_countries()
+        #top_municipalities = Entrances.get_top_municipalities()
+
+        #period_list = Entrances.get_period_list()
+        #period_list_totals = Entrances.get_period_list_totals()
 
         return render_template("index.html",
                                date_warning = False,
                                upper_date = upper_date,
                                lower_date = lower_date,
-                               gate = gate_to_string(gate),
-                               sum_vehicles = sum_vehicles,
-                               sum_passengers = sum_passengers,
-                               sum_pedestrians = sum_pedestrians,
-                               top_gates = top_gates,
-                               top_countries = top_countries,
-                               top_municipalities = top_municipalities,
-                               period_list = period_list,
-                               period_list_totals = period_list_totals,
+                               gate = gate,
+         #                      sum_vehicles = sum_vehicles,
+         #                      sum_passengers = sum_passengers,
+         #                      sum_pedestrians = sum_pedestrians,
+         #                      top_gates = top_gates,
+         #                      top_countries = top_countries,
+         #                      top_municipalities = top_municipalities,
+         #                      period_list = period_list,
+         #                      period_list_totals = period_list_totals,
         )
 
     ###default route(/)
     #TODO: set lower_date to inauguration date
     lower_date = date(2010,1,1)
     upper_date = date.today()
+
+    #NOTE: to create table uncomment this on first install
+    #from .db_create import create_tables
+    #create_tables()
+
+
     return render_template("index.html",
                            date_warning = False,
                            upper_date = upper_date,
@@ -96,7 +94,6 @@ def upload():
     if request.method == 'POST' and 'file[]' in request.files:
         uploaded_files = request.files.getlist("file[]")
 
-        #TODO: validate files
         for current_file in uploaded_files:
             update_database(current_file)
     else:

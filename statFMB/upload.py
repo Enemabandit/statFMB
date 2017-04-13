@@ -1,46 +1,166 @@
 from openpyxl import load_workbook, worksheet
 from datetime import date
-from .statFMB import db
-from .models import Entrances
+from .statFMB import (db, Report, Entrance, Shift, Gate,
+                      Vehicle_type, Country, Municipality)
+from difflib import ndiff, SequenceMatcher
 
 #TODO: don't let files be uploaded more than once
 #TODO: error handling
+
 def update_database(new_file):
     print("inserting:", new_file.filename, "in database.")
 
-    wb = load_workbook(new_file, read_only = True)
+    ##load uploaded file and sheets
+    wb = load_workbook(new_file, read_only = True, data_only = True)
     statSheet = wb.get_sheet_by_name("Estatística")
     regSheet = wb.get_sheet_by_name("Folha de Registo")
 
-    iso_date = format_date(regSheet['C6'].value)
-    gate = regSheet['A4'].value.rsplit(' ',1)[-1].capitalize()
-    if gate not in ["Ameias","Serpa","Rainha"]:
+    ##date
+    date = format_date(regSheet['C6'].value)
+    print("==> date: {}".format(date))
+
+    ##gate
+    gate_str = regSheet['A4'].value.rsplit(' ',1)[-1].capitalize()
+    if gate_str not in ["Ameias","Serpa","Rainha"]:
         #TODO: error views
-        print("could not find gate!")
+        print("==>could not find gate!")
+    gate = Gate.get_gate(gate_str)
 
-    #get list of payed entrances
-    payer_upper_bound="Dados visitantes veículos pagantes"
-    payer_lower_bound="Dados visitantes veículos não pagantes (hóspedes, reuniões, outros)"
-    payer_interval = find_row_interval(statSheet,payer_upper_bound,
-                                       payer_lower_bound)
+    ##shift
+    shift_str = get_shift(regSheet)
+    print ("==> Shift: " + shift_str)
+    shift = Shift.get_shift(shift_str)
 
-    payed_entraces = create_entrance_list(statSheet,payer_interval)
+    ##total_vehicles
+    total_vehicles = get_total_vehicles(regSheet)
+    print ("==> Vehicles: " + str(total_vehicles))
 
-    print (payer_interval)
-    print (len(payed_entraces))
+    #pawns
+    pawns = get_pawns(statSheet)
+    print ("==> Pawns: " + str(pawns))
+
+    #bicicles
+    bicicles = get_bicicles(statSheet)
+    print ("==> Bicicles: " + str(bicicles))
+
+    #entrances
+    payed_entrances = []
+    payed_entraces = get_entrance_list(statSheet)
     for entry in payed_entraces:
-        print(entry)
+        print ("> {}".format(entry))
+    print ("==> Entrances registered: {}".format(len(payed_entraces)))
+
+    #passengers
+    passengers = 0
+    for entry in payed_entrances:
+        passengers += entry[1]
+
+    report = Report(date = date,
+                    vehicles = total_vehicles,
+                    pawns = pawns,
+                    bicicles = bicicles,
+                    gate = gate,
+                    shift = shift
+    )
+
+    entrances_list = []
+    for entry in payed_entraces:
+        vehicle_type = Vehicle_type.get_vehicle_type(entry[0])
+        #TODO: validate!!
+        country = Country.get_country(entry[2])
+        #TODO: validate!!
+        municipality = Municipality.get_municipality(entry[3])
+        entrance = Entrance(passengers = passengers,
+                            report = report,
+                            vehicle_type = vehicle_type,
+                            country = country,
+                            municipality = municipality)
+        entrances_list.append(entrance)
+
+    print ("All instances Created, updating database!")
+
+    if Report.is_eligible(date,shift):
+        db.session.add(report)
+        for entrance in entrances_list:
+            db.session.add(entrance)
+        db.session.commit()
+    else:
+        #TODO: implement override
+        print("Override not implemented")
+
     return
 
+
+def get_shift(sheet):
+
+    start = sheet['R5'].value
+    end = sheet['V5'].value
+
+    shift = "Meio" if end - start < 8 else "Completo"
+
+    return shift
+
+
+def get_total_vehicles(sheet):
+    result = 0
+    for row in sheet.iter_rows(min_col = 20,
+                               max_col = 20,
+                               min_row = 11,
+                               max_row = 18,):
+        for cell in row:
+            if cell.value:
+                result += cell.value
+    return result
+
+
+def get_pawns(sheet):
+    col_number = 1
+    col_leter = 'A'
+    lower_bound = "N.º entradas a pé"
+    interval = find_row_interval(sheet,
+                                 col_number,
+                                 lower_delimiter = lower_bound)
+
+    pawn_list = str_to_int_list(sheet[col_leter + str(interval[0]+1) :
+                                      col_leter + str(interval[1])])
+
+    return sum(pawn_list)
+
+
+def get_bicicles(sheet):
+    col_number = 9
+    col_leter = 'I'
+    lower_bound = "N.º entradas de bicicleta"
+    interval = find_row_interval(sheet,
+                                 col_number,
+                                 lower_delimiter = lower_bound)
+
+    bicicle_list = str_to_int_list(sheet[col_leter + str(interval[0]+1) :
+                                         col_leter + str(interval[1])])
+    return sum(bicicle_list)
+
+    return
+
+
 #returns a list of entrances
-def create_entrance_list(sheet,interval):
+def get_entrance_list(sheet):
+    #get list of payed entrances
+    col_number = 1
+    upper_bound = "Dados visitantes veículos pagantes"
+    lower_bound = "Dados visitantes veículos não pagantes (hóspedes, reuniões, outros)"
+    interval = find_row_interval(sheet, col_number,
+                                 upper_bound, lower_bound)
     entrance_list = []
 
     for row in sheet.iter_rows(min_row=interval[0]+2,
                                max_row=interval[1]-1,
                                max_col=19):
         if row[0].value:
-            entrance_type = row[0].value
+
+            #NOTE: defaults to "invalid" in not entrance_type or typo
+            #TODO: WORKING ON CREATING INVALID ENTRY!!!!!
+            entrance_type = clean_entrance_type_str(row[0].value.capitalize())
+
             if row[6].value: n_persons = row[6].value
             else: n_persons = 0
 
@@ -55,19 +175,64 @@ def create_entrance_list(sheet,interval):
 
     return entrance_list
 
-#returns the row interval between lower_delimiter and upper_delimiter
-def find_row_interval(sheet,lower_delimiter, upper_delimiter):
-    lower_bound = 0
-    upper_bound = 0
 
-    for row in sheet.iter_rows(max_col=1):
+def clean_entrance_type_str(word):
+    #NOTE: set default here
+    default = "invalid"
+
+    #TODO: change this to a db query
+    entrance_type_list = ["Ligeiro", "Ligeiro XL", "Caravana",
+                         "Moto", "Autocarro"]
+
+    match = [0,""]
+    if word not in entrance_type_list:
+        ratio = 0
+        for entry in entrance_type_list:
+            ratio = equivalence_ratio(word,entry)
+            print(ratio)
+            if ratio > match[0]:
+                match[0] = ratio
+                match[1] = entry
+    else:
+        match[0] = 1
+        match[1] = word
+
+    #test diference between Ligeiro and Ligeiro XL by char count
+    #TODO: rework this
+    if match[1] == "Ligeiro" or match[1] == "Ligeiro XL":
+        if len(word) > 8:
+            match[1] = "Ligeiro XL"
+        else: match[1] = "Ligeiro"
+
+    if match[0] >= 0.7:
+        return match[1]
+    else:
+        return default
+
+
+
+#returns the row interval between lower_delimiter and upper_delimiter
+def find_row_interval(sheet, column = 1,
+                      lower_delimiter = None, upper_delimiter = None):
+    upper_bound = 0
+    lower_bound = 0
+
+    for row in sheet.iter_rows(min_col = column-1,max_col = column):
         for cell in row:
-            if cell.value == lower_delimiter:
-                lower_bound = cell.row
-            if cell.value == upper_delimiter:
-                upper_bound = cell.row
+            if lower_delimiter:
+                if cell.value == lower_delimiter:
+                    lower_bound = cell.row
+            else:
+                upper_delimiter = 0
+
+            if upper_delimiter:
+                if cell.value == upper_delimiter:
+                    upper_bound = cell.row
+            else:
+                upper_delimiter = sheet.max_row
 
     return (lower_bound,upper_bound)
+
 
 #expects a string "dd-mm-yyyy" or "dd/mm/yyyy" and formats to iso
 def format_date(d):
@@ -86,3 +251,22 @@ def format_date(d):
         print("could not find date!")
 
     return formated_date
+
+
+def str_to_int_number(n):
+    n_str = ''.join(c for c in n if c.isdigit())
+    return int(n_str)
+
+
+def str_to_int_list(l):
+    new_list = []
+    for element in l:
+        if element[0].value != None:
+            new_list.append(str_to_int_number(str(element[0].value)))
+    return new_list
+
+
+# returns the diference ratio
+def equivalence_ratio(word,reference):
+    s = SequenceMatcher(None,word,reference)
+    return s.ratio()

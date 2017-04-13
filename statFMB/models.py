@@ -1,15 +1,13 @@
-from .statFMB import app
+from .statFMB import db
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-#from collections import Counter, OrderedDict
 
-
-db = SQLAlchemy(app)
+from datetime import date
 
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False)
+    date = db.Column(db.Date,index = True, nullable=False)
     vehicles = db.Column(db.Integer)
     pawns = db.Column(db.Integer)
     bicicles = db.Column(db.Integer)
@@ -18,161 +16,98 @@ class Report(db.Model):
 
     entrance = db.relationship("Entrance", backref="report", lazy="dynamic")
 
+    def __repr__(self):
+        return '<Report {} - {} - {}'.format(self.id,self.date ,self.gate)
+
+    #TODO: this logic is not working!!!!!!!!!!!!!!!!!!!!!!
+    #      cls.date == input_date not working
+    #      Report.date is no acepting the date in the constructor
+    @classmethod
+    def is_eligible(cls,input_date,input_shift):
+
+        print(type(input_date))
+        print(type(cls.date))
+        query = cls.query.filter(cls.date == input_date).all()
+
+        print("query len: {}".format(len(query)))
+
+        #query always gets at least 1, wich is the on we are importing
+        print(input_shift.shift)
+        if len(query) > 1:
+            if len(query) < 3 and input_shift.shift == "Meio":
+                    return True
+            else:
+                return False
+        else:
+            return True
+
+
+    #creates the search_list with all the entrances from de date range
+    @classmethod
+    def create_search_list(cls,lower_date, upper_date, selected_gate):
+        cls.s_query = (cls.query
+                       .join(Entrance)
+                       .join(Gate)
+                       .join(Vehicle_type)
+                       .join(Country)
+                       .join(Municipality)
+                       .add_columns(cls.date,
+                                    cls.vehicles,
+                                    cls.pawns,
+                                    cls.vehicles,
+                                    Gate.gate,
+                                    Entrance.passengers,
+                                    Vehicle_type.vehicle_type,
+                                    Country.country,
+                                    Municipality.municipality)
+                       .filter(cls.date >= lower_date)
+                       .filter(cls.date <= upper_date)
+        )
+        if selected_gate != "Todas":
+            cls.s_query = cls.s_query.filter(Gate.gate == selected_gate)
+
+        cls.search_list = cls.s_query.all()
+
+        return
+
+
 class Shift(db.Model):
     __tablename__ = "shifts"
     id = db.Column(db.Integer, primary_key = True)
-    duration = db.Column(db.String(20), nullable=False)
+    shift = db.Column(db.String(20), nullable=False)
 
     report = db.relationship("Report", backref="shift", lazy="dynamic")
 
-#TODO: set @classmethods
+    def __init__(self, shift):
+        self.shift = shift
+
+    @classmethod
+    def get_shift(cls,s):
+        return cls.query.filter(cls.shift == s).one()
+
+
 class Entrance(db.Model):
     __tablename__ = 'entrances'
     id = db.Column(db.Integer, primary_key=True)
-    n_persons = db.Column(db.Integer)
+    passengers = db.Column(db.Integer)
 
     report_id = db.Column(db.Integer, db.ForeignKey('reports.id'))
     vehicle_type_id = db.Column(db.Integer, db.ForeignKey('vehicle_types.id'))
     country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
     municipality_id = db.Column(db.Integer, db.ForeignKey('municipalities.id'))
 
-    ### Constructor for Entrances objects
-    def __init__(self,id,date,n_persons,entrance_type_id,gate_id,
-                 country_id,municipality_id):
-        self.id = id
-        self.date = date
+    """
+    def __init__(self,n_persons,report,vehicle_type,country,municipality):
         self.n_persons = n_persons
-        self.entrance_type_id = entrance_type_id
-        self.gate_id = gate_id
+        self.report = report
+        self.vehicle_type = vehicle_type
         self.country = country
-        self.municipality_id = municipality_id
+        self.municipality = municipality
+    """
 
-    #initializes the seached_list with all entrances filtered by the user input
-    def create_searched_list(lower_date, upper_date, gate):
-        if  int(gate) == 4:
-            Entrances.searched_list = (Entrances.query
-                                       .join(Gates)
-                                       .join(Countries)
-                                       .join(Municipalities)
-                                       .join(Entrance_types)
-                                       .filter(Entrances.date >= lower_date)
-                                       .filter(Entrances.date <= upper_date)
-                                       .all())
-        else:
-            Entrances.searched_list = (Entrances.query
-                                       .join(Gates)
-                                       .join(Countries)
-                                       .join(Municipalities)
-                                       .join(Entrance_types)
-                                       .filter(Entrances.date >= lower_date)
-                                       .filter(Entrances.date <= upper_date)
-                                       .filter(Entrances.gate_id == int(gate))
-                                       .all())
+    def __repr__(self):
+        return '<Entrance {}'.format(self.id)
 
-    ###GET FUNCTIONS
-    #returns a dictionary ordered by top gate with the related gate entrances
-    #NOTE:get_top_x() returns the number of persons for each x
-    #TODO:think about a solution to show get_top_x() for persons and vehicles
-    #TODO:limit size of get_top_x() returns
-    def get_top_gates():
-        top_gates = {"Ameias": 0, "Serpa": 0, "Rainha": 0}
-        for entrance in Entrances.searched_list:
-            top_gates[gate_to_string(entrance.gate_id)] += entrance.n_persons
-        return sort_dict(top_gates)
-
-    def get_top_countries():
-        top_countries = Counter()
-        for entrance in Entrances.searched_list:
-            current_country = entrance.country.country
-            top_countries[current_country] += entrance.n_persons
-        return top_countries.most_common(5)
-
-    def get_top_municipalities():
-        top_municipalities = Counter()
-        for entrance in Entrances.searched_list:
-            if entrance.country_id == 1:
-                current_m = entrance.municipality.municipality
-                top_municipalities[current_m] += entrance.n_persons
-        return top_municipalities.most_common(5)
-
-    ##returns a OrderedDict as explained below
-    #
-    #  period_list = ["yyyy-mm-dd": [entrance_type_id: n_vehicles,
-    #                                entrance_type_id: n_vehicles,
-    #                                ...]
-    #                 "yyyy-mm-dd": [entrance_type_id: n_vehicles,
-    #                                ...]
-    #                 ...]
-    #
-    #  ids[1..8] = entrance types; [9] = passengers ; [10] = vehicles
-    #
-    #TODO:default show results by day, implement period option
-    #TODO:implement pagination
-    def get_period_list():
-        period_entry = Counter()
-        period_list = Counter()
-
-        for entrance in Entrances.searched_list:
-            if entrance.entrance_type_id not in (1,2):
-                add_entrance = Counter()
-                add_entrance[entrance.entrance_type_id] = 1
-                #add the number os passengers
-                add_entrance[9] = entrance.n_persons
-                #udd the sum of vehicles
-                add_entrance[10]= 1
-            else:
-                add_entrance = Counter()
-                add_entrance[entrance.entrance_type_id] = entrance.n_persons
-
-            #update period_list
-            if period_list[entrance.date] != 0:
-                period_list[entrance.date] += add_entrance
-            else:
-                period_list[entrance.date] = add_entrance
-
-        #sort list
-        sorted_list = OrderedDict(sorted(period_list.items(),
-                                         key=lambda t: t[0],
-                                         reverse = True))
-        Entrances.period_list = sorted_list
-        return sorted_list
-
-    def get_period_list_totals():
-        totals = Counter()
-        for period in Entrances.period_list:
-            if totals != 0:
-                totals += Entrances.period_list[period]
-            else:
-                totals = Entrances.period_list[period]
-        print (totals)
-        return totals
-
-
-    #TODO: bicicles counting as vehicles, solve this
-    def get_sum_vehicles():
-        sum_vehicles = 0
-        for entrance in Entrances.searched_list:
-            if entrance.entrance_type_id != 1:
-                sum_vehicles += 1
-        return sum_vehicles
-
-    #TODO: bicicles counting as vehicles,solve this
-    def get_sum_passengers():
-        sum_passengers = 0
-        for entrance in Entrances.searched_list:
-            if entrance.entrance_type_id != 1:
-                sum_passengers += entrance.n_persons
-        return sum_passengers
-
-    #TODO: think about where to put biciles
-    def get_sum_pedestrians():
-        sum_pedestrians = 0
-        for entrance in Entrances.searched_list:
-            if entrance.entrance_type_id == 1:
-                sum_pedestrians += entrance.n_persons
-        return sum_pedestrians
-
-    ###
 
 class Vehicle_type(db.Model):
     __tablename__ = 'vehicle_types'
@@ -181,6 +116,13 @@ class Vehicle_type(db.Model):
     entrance = db.relationship("Entrance", backref="vehicle_type",
                                lazy="dynamic")
 
+    def __init__(self,vehicle_type):
+        self.vehicle_type = vehicle_type
+
+    @classmethod
+    def get_vehicle_type(cls,v):
+        return cls.query.filter(cls.vehicle_type == v).one()
+
 
 class Gate(db.Model):
     __tablename__ = 'gates'
@@ -188,13 +130,32 @@ class Gate(db.Model):
     gate = db.Column(db.String(20), nullable=False)
     report = db.relationship("Report", backref="gate", lazy="dynamic")
 
+    def __init__(self, gate):
+        self.gate = gate
+
+    @classmethod
+    def get_gate(cls,g):
+        return cls.query.filter(cls.gate == g).one()
+
 
 class Country(db.Model):
     __tablename__ = 'countries'
     id = db.Column(db.Integer, primary_key=True)
     country = db.Column(db.String(50), nullable=False)
-    report = db.relationship("Report", backref="country", lazy="dynamic")
+    entrance = db.relationship("Entrance", backref="country", lazy="dynamic")
     alias = db.relationship("Country_alias", backref="country", lazy="dynamic")
+
+    def __init__(self,country):
+        self.country = country
+
+    #TODO:when c == "" validate ocordingly
+    @classmethod
+    def get_country(cls,c):
+        if c == "":
+            return cls.query.filter(cls.country == "Portugal").one()
+        else:
+            return cls.query.filter(cls.country == c).one()
+
 
 class Country_alias(db.Model):
     __tablename__ = 'country_alias'
@@ -202,13 +163,25 @@ class Country_alias(db.Model):
     alias = db.Column(db.String(50), nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
 
+
 class Municipality(db.Model):
     __tablename__ = 'municipalities'
     id = db.Column(db.Integer, primary_key=True)
     municipality = db.Column(db.String(50), nullable=False)
-    report = db.relationship("Report", backref="municipality", lazy="dynamic")
+    entrance = db.relationship("Entrance", backref="municipality", lazy="dynamic")
     alias = db.relationship("Municipality_alias", backref="municipality",
                             lazy="dynamic")
+
+    def __init__(self,municipality):
+        self.municipality = municipality
+
+    #TODO:when m == "" validate ocordingly
+    @classmethod
+    def get_municipality(cls,m):
+        if m == "":
+            return cls.query.filter(cls.municipality == "Lisboa").one()
+        else:
+            return cls.query.filter(cls.municipality == m).one()
 
 
 class Municipality_alias(db.Model):
@@ -216,6 +189,11 @@ class Municipality_alias(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     alias = db.Column(db.String(50), nullable=False)
     municipality_id = db.Column(db.Integer, db.ForeignKey('municipalities.id'))
+
+    def __init__(self,alias,municipality):
+        self.alias = alias
+        self.municipality = municipality
+
 
 ###END OF DB.MODELS
 
@@ -231,18 +209,3 @@ class Period:
 
     pass
 
-
-#returns a dictionary sorted by value, from an unsorted dictionary
-#returns none if argument type != dictionary
-def sort_dict(d):
-    if type(d) == dict:
-        sorted_d = {}
-        for key, value in sorted(d.items(),
-                                 key = lambda t: t[1],
-                                 reverse = True):
-            sorted_d[key] = value
-        return sorted_d
-    else:
-        return
-
-#db.create_all()
