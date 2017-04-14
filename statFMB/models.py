@@ -1,8 +1,10 @@
-from .statFMB import db
+from datetime import date
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from datetime import date
+from .statFMB import db
+from .modules.utils import is_typo
 
 class Report(db.Model):
     __tablename__ = 'reports'
@@ -25,14 +27,8 @@ class Report(db.Model):
     @classmethod
     def is_eligible(cls,input_date,input_shift):
 
-        print(type(input_date))
-        print(type(cls.date))
         query = cls.query.filter(cls.date == input_date).all()
-
-        print("query len: {}".format(len(query)))
-
-        #query always gets at least 1, wich is the on we are importing
-        print(input_shift.shift)
+        #query always gets at least 1, wich is the on we are uploading
         if len(query) > 1:
             if len(query) < 3 and input_shift.shift == "Meio":
                     return True
@@ -113,7 +109,10 @@ class Vehicle_type(db.Model):
     __tablename__ = 'vehicle_types'
     id = db.Column(db.Integer, primary_key=True)
     vehicle_type = db.Column(db.String(20), nullable=False)
+
     entrance = db.relationship("Entrance", backref="vehicle_type",
+                               lazy="dynamic")
+    alias = db.relationship("Vehicle_type_alias", backref="vehicle_type",
                                lazy="dynamic")
 
     def __init__(self,vehicle_type):
@@ -121,7 +120,59 @@ class Vehicle_type(db.Model):
 
     @classmethod
     def get_vehicle_type(cls,v):
-        return cls.query.filter(cls.vehicle_type == v).one()
+        clean_str = cls.clean_str(v)
+        if clean_str != "invalid":
+            return cls.query.filter(cls.vehicle_type == clean_str).one()
+        else:
+            return None
+
+    #returns the string cleaned for vehicle_type or "invalid" when not found
+    @classmethod
+    def clean_str(cls,word):
+        vehicle_type_obj_list = cls.query.all()
+
+        vehicle_type_list = []
+        for vt in vehicle_type_obj_list:
+            vehicle_type_list.append(vt.vehicle_type)
+
+        if word in vehicle_type_list:
+            return word
+        else:
+            for vehicle_type in vehicle_type_list:
+                if is_typo(word,vehicle_type):
+                    return vehicle_type
+                else:
+                    if Vehicle_type_alias.is_alias(word,vehicle_type):
+                        return vehicle_type
+            else:
+                return "invalid"
+
+
+class Vehicle_type_alias(db.Model):
+    __tablename__ = "vehicle_type_alias"
+    id = db.Column(db.Integer, primary_key=True)
+    alias = db.Column(db.String(20), nullable = False)
+    vehicle_type_id = db.Column(db.Integer, db.ForeignKey("vehicle_types.id"))
+
+    def __init__(self, alias, vehicle_type):
+        self.alias = alias
+        self.vehicle_type = vehicle_type
+
+    @classmethod
+    def is_alias(cls, word, vehicle_type):
+        alias_list = cls.query.filter(vehicle_type == vehicle_type).all()
+
+        if alias_list:
+            if word not in alias_list:
+                for alias in alias_list:
+                    if is_typo(word,alias.alias):
+                        return True
+                else:
+                    return False
+            else:
+                return True
+        else:
+            return False
 
 
 class Gate(db.Model):
@@ -187,7 +238,7 @@ class Municipality(db.Model):
 class Municipality_alias(db.Model):
     __tablename__ = 'municipality_alias'
     id = db.Column(db.Integer, primary_key=True)
-    alias = db.Column(db.String(50), nullable=False)
+    alias = db.Column(db.String(100), nullable=False)
     municipality_id = db.Column(db.Integer, db.ForeignKey('municipalities.id'))
 
     def __init__(self,alias,municipality):

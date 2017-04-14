@@ -71,6 +71,7 @@ def index():
     upper_date = date.today()
 
     #NOTE: to create table uncomment this on first install
+    #TODO: rework this, rly ugly!!
     #from .db_create import create_tables
     #create_tables()
 
@@ -86,18 +87,23 @@ def charts():
     return redirect("/")
 
 
-#TODO: don't let files be uploaded more than once
+#TODO: handle error when user doesn't select file
 @app.route('/upload',methods=['GET','POST'])
 def upload():
     from .upload import update_database
 
     if request.method == 'POST' and 'file[]' in request.files:
         uploaded_files = request.files.getlist("file[]")
+        upload_results = update_database(uploaded_files)
 
-        for current_file in uploaded_files:
-            update_database(current_file)
+        for result in upload_results:
+            print (result)
+            for l in upload_results[result]:
+                print (l)
+
     else:
         #TODO:handle file error warning
         print("!!err uploading file")
+        render_template("upload.html")
 
-    return redirect("/")
+    return render_template("upload.html")

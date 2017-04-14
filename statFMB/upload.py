@@ -2,13 +2,25 @@ from openpyxl import load_workbook, worksheet
 from datetime import date
 from .statFMB import (db, Report, Entrance, Shift, Gate,
                       Vehicle_type, Country, Municipality)
-from difflib import ndiff, SequenceMatcher
 
-#TODO: don't let files be uploaded more than once
-#TODO: error handling
+#TODO: error views for upload, read sheets, date, gate, shift, report
+##
 
-def update_database(new_file):
-    print("inserting:", new_file.filename, "in database.")
+#returns a Dict with results from the update, indexed by file
+def update_database(new_files):
+
+    upload_results = {}
+    for new_file in new_files:
+
+        report, entrance_obj_list, error_list = upload_file(new_file)
+        upload_results[new_file.filename] = [report,
+                                             entrance_obj_list,
+                                             error_list]
+
+    return upload_results
+
+def upload_file(new_file):
+    print("inserting: {} in database.".format(new_file.filename))
 
     ##load uploaded file and sheets
     wb = load_workbook(new_file, read_only = True, data_only = True)
@@ -43,18 +55,6 @@ def update_database(new_file):
     bicicles = get_bicicles(statSheet)
     print ("==> Bicicles: " + str(bicicles))
 
-    #entrances
-    payed_entrances = []
-    payed_entraces = get_entrance_list(statSheet)
-    for entry in payed_entraces:
-        print ("> {}".format(entry))
-    print ("==> Entrances registered: {}".format(len(payed_entraces)))
-
-    #passengers
-    passengers = 0
-    for entry in payed_entrances:
-        passengers += entry[1]
-
     report = Report(date = date,
                     vehicles = total_vehicles,
                     pawns = pawns,
@@ -62,33 +62,31 @@ def update_database(new_file):
                     gate = gate,
                     shift = shift
     )
+    print("==> Report Created!")
 
-    entrances_list = []
-    for entry in payed_entraces:
-        vehicle_type = Vehicle_type.get_vehicle_type(entry[0])
-        #TODO: validate!!
-        country = Country.get_country(entry[2])
-        #TODO: validate!!
-        municipality = Municipality.get_municipality(entry[3])
-        entrance = Entrance(passengers = passengers,
-                            report = report,
-                            vehicle_type = vehicle_type,
-                            country = country,
-                            municipality = municipality)
-        entrances_list.append(entrance)
+    print("==> Instanciating entrances!")
+    #entrances
+    entrance_obj_list, error_list = get_entrance_list(statSheet,report)
+    print ("==> Entrances registered: {}".format(len(entrance_obj_list)))
+    print ("==> Errors found: {}".format(len(error_list)))
+
+    #passengers
+    passengers = 0
+    for entrance in entrance_obj_list:
+        passengers += entrance.passengers
 
     print ("All instances Created, updating database!")
-
     if Report.is_eligible(date,shift):
         db.session.add(report)
-        for entrance in entrances_list:
+        for entrance in entrance_obj_list:
             db.session.add(entrance)
         db.session.commit()
+        print("database updated for: {}".format(new_file.filename))
     else:
         #TODO: implement override
         print("Override not implemented")
 
-    return
+    return report, entrance_obj_list, error_list
 
 
 def get_shift(sheet):
@@ -139,76 +137,49 @@ def get_bicicles(sheet):
                                          col_leter + str(interval[1])])
     return sum(bicicle_list)
 
-    return
 
-
-#returns a list of entrances
-def get_entrance_list(sheet):
+#returns a tuple (entrance_obj_list, error_list)
+def get_entrance_list(sheet,report):
     #get list of payed entrances
     col_number = 1
     upper_bound = "Dados visitantes veículos pagantes"
-    lower_bound = "Dados visitantes veículos não pagantes (hóspedes, reuniões, outros)"
+    lower_bound = "Dados visitantes veículos não pagantes " + \
+                  "(hóspedes, reuniões, outros)"
     interval = find_row_interval(sheet, col_number,
                                  upper_bound, lower_bound)
-    entrance_list = []
+    entrance_obj_list = []
+    error_list = []
 
     for row in sheet.iter_rows(min_row=interval[0]+2,
                                max_row=interval[1]-1,
                                max_col=19):
         if row[0].value:
+            vehicle_type = Vehicle_type.clean_str(row[0].value.capitalize())
 
-            #NOTE: defaults to "invalid" in not entrance_type or typo
-            #TODO: WORKING ON CREATING INVALID ENTRY!!!!!
-            entrance_type = clean_entrance_type_str(row[0].value.capitalize())
+            if row[6].value: passengers = row[6].value
+            else: passengers = 0
 
-            if row[6].value: n_persons = row[6].value
-            else: n_persons = 0
-
+            #TODO: VALIDATE
             if row[12].value: country = row[12].value.capitalize()
             else: country = ""
 
+            #TODO: VALIDATE
             if row[18].value: municipality = row[18].value.capitalize()
             else: municipality = ""
 
-            entrance_list.append([entrance_type,n_persons,
-                                  country,municipality])
+            #test if everything is valid
+            if vehicle_type != "invalid" and country != "" and municipality != "":
+                entrance = Entrance(passengers = passengers,
+                                    report = report,
+                                    vehicle_type = Vehicle_type(vehicle_type),
+                                    country = Country(country),
+                                    municipality = Municipality(municipality),
+                )
 
-    return entrance_list
-
-
-def clean_entrance_type_str(word):
-    #NOTE: set default here
-    default = "invalid"
-
-    #TODO: change this to a db query
-    entrance_type_list = ["Ligeiro", "Ligeiro XL", "Caravana",
-                         "Moto", "Autocarro"]
-
-    match = [0,""]
-    if word not in entrance_type_list:
-        ratio = 0
-        for entry in entrance_type_list:
-            ratio = equivalence_ratio(word,entry)
-            print(ratio)
-            if ratio > match[0]:
-                match[0] = ratio
-                match[1] = entry
-    else:
-        match[0] = 1
-        match[1] = word
-
-    #test diference between Ligeiro and Ligeiro XL by char count
-    #TODO: rework this
-    if match[1] == "Ligeiro" or match[1] == "Ligeiro XL":
-        if len(word) > 8:
-            match[1] = "Ligeiro XL"
-        else: match[1] = "Ligeiro"
-
-    if match[0] >= 0.7:
-        return match[1]
-    else:
-        return default
-
+                entrance_obj_list.append(entrance)
+            else:
+                error_list.append([vehicle_type,passengers,country,municipality])
+    return entrance_obj_list, error_list
 
 
 #returns the row interval between lower_delimiter and upper_delimiter
@@ -264,9 +235,3 @@ def str_to_int_list(l):
         if element[0].value != None:
             new_list.append(str_to_int_number(str(element[0].value)))
     return new_list
-
-
-# returns the diference ratio
-def equivalence_ratio(word,reference):
-    s = SequenceMatcher(None,word,reference)
-    return s.ratio()

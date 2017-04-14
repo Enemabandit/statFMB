@@ -1,21 +1,59 @@
 from .statFMB import db
 from .models import (Country, Municipality, Municipality_alias,
-                     Shift, Gate, Vehicle_type)
+                     Shift, Gate, Vehicle_type, Vehicle_type_alias)
 import csv
+from collections import defaultdict
 
 #create the Database and db tables
 def create_tables():
     db.create_all()
     insert_countries()
-    insert_Municipalities_and_alias()
+    insert_municipalities_and_alias()
     insert_shifts()
     insert_gates()
     insert_vehicle_types()
+    #insert_vehicle_types_and_alias()
 
     db.session.commit()
     return
 
 #insert
+
+def insert_vehicle_types():
+   db.session.add(Vehicle_type("Moto"))
+   db.session.add(Vehicle_type("Ligeiro"))
+   db.session.add(Vehicle_type("Ligeiro XL"))
+   db.session.add(Vehicle_type("Caravana"))
+   db.session.add(Vehicle_type("Autocarro"))
+
+'''
+def insert_vehicle_types_and_alias():
+    read_list = []
+    with open('static/resources/vt_alias.csv', 'rt',
+              encoding = "ISO-8859-1") as vehicle_type_csv:
+        reader = csv.reader(vehicle_type_csv, delimiter = ',')
+        for row in reader:
+            read_list.append(row)
+
+    vehicle_type_dict = defaultdict(list)
+    for entry in read_list:
+        vehicle_type = entry[0]
+        vehicle_type_alias = entry[1]
+        vehicle_type_dict[vehicle_type].append(Vehicle_type_alias)
+
+    vehicle_type_obj_list = []
+    vehicle_type_alias_obj_list = []
+    for vehicle_type, alias_list in vehicle_type_dict.items():
+        vehicle_type_obj = Vehicle_type(vehicle_type)
+        vehicle_type_obj_list.append(vehicle_type_obj)
+        for alias in alias_list:
+            alias_obj = Vehicle_type_alias(alias,vehicle_type_obj)
+            vehicle_type_alias_obj_list.append(alias_obj)
+
+    db.session.add_all(vehicle_type_obj_list)
+    db.session.add_all(vehicle_type_alias_obj_list)
+
+'''
 
 def insert_countries():
     country_list = []
@@ -37,8 +75,7 @@ def insert_countries():
     return
 
 
-def insert_Municipalities_and_alias():
-    from collections import defaultdict
+def insert_municipalities_and_alias():
 
     read_list = []
     #read table from file
@@ -68,13 +105,6 @@ def insert_Municipalities_and_alias():
 
     return
 
-
-def insert_vehicle_types():
-   db.session.add(Vehicle_type("Moto"))
-   db.session.add(Vehicle_type("Ligeiro"))
-   db.session.add(Vehicle_type("Ligeiro XL"))
-   db.session.add(Vehicle_type("Caravana"))
-   db.session.add(Vehicle_type("Autocarro"))
 
 def insert_shifts():
    db.session.add(Shift("Completo"))
