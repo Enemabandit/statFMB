@@ -4,7 +4,8 @@ from .statFMB import (db, Report, Entrance, Shift, Gate,
                       Vehicle_type, Country, Municipality)
 
 #TODO: error views for upload, read sheets, date, gate, shift, report
-##
+#TODO: create a pending entrances, mainly for email script but also
+#      so we don't loose invalid entrances
 
 #returns a Dict with results from the update, indexed by file
 def update_database(new_files):
@@ -19,9 +20,11 @@ def update_database(new_files):
 
     return upload_results
 
+
 def upload_file(new_file):
     print("inserting: {} in database.".format(new_file.filename))
 
+    #TODO: open .xls workbook as xlsx
     ##load uploaded file and sheets
     wb = load_workbook(new_file, read_only = True, data_only = True)
     statSheet = wb.get_sheet_by_name("Estatística")
@@ -160,25 +163,36 @@ def get_entrance_list(sheet,report):
             else: passengers = 0
 
             #TODO: VALIDATE
-            if row[12].value: country = row[12].value.capitalize()
-            else: country = ""
+            if row[12].value:
+                country = Country.clean_str(row[12].value.capitalize())
+                if country == "invalid":
+                    country = row[12].value
+            else:
+                #NOTE: this sets de default for "" as Portugal
+                country = "Portugal"
 
             #TODO: VALIDATE
             if row[18].value: municipality = row[18].value.capitalize()
             else: municipality = ""
 
             #test if everything is valid
-            if vehicle_type != "invalid" and country != "" and municipality != "":
+            if vehicle_type != "invalid" and country != "N/A" and municipality != "":
                 entrance = Entrance(passengers = passengers,
                                     report = report,
-                                    vehicle_type = Vehicle_type(vehicle_type),
-                                    country = Country(country),
-                                    municipality = Municipality(municipality),
+                                    vehicle_type = Vehicle_type
+                                    .get_vehicle_type(vehicle_type),
+                                    country = Country.get_country(country),
+                                    municipality = Municipality
+                                    .get_municipality(municipality),
                 )
 
                 entrance_obj_list.append(entrance)
             else:
-                error_list.append([vehicle_type,passengers,country,municipality])
+                error_list.append([row[0].value.capitalize(),
+                                   passengers,
+                                   country,
+                                   municipality])
+
     return entrance_obj_list, error_list
 
 

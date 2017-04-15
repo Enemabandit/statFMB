@@ -6,6 +6,9 @@ from flask_sqlalchemy import SQLAlchemy
 from .statFMB import db
 from .modules.utils import is_typo
 
+#TODO: create class to deal with Entrance atributes and alias
+###Database models
+## Report related models
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
@@ -82,6 +85,21 @@ class Shift(db.Model):
         return cls.query.filter(cls.shift == s).one()
 
 
+class Gate(db.Model):
+    __tablename__ = 'gates'
+    id = db.Column(db.Integer, primary_key=True)
+    gate = db.Column(db.String(20), nullable=False)
+    report = db.relationship("Report", backref="gate", lazy="dynamic")
+
+    def __init__(self, gate):
+        self.gate = gate
+
+    @classmethod
+    def get_gate(cls,g):
+        return cls.query.filter(cls.gate == g).one()
+
+
+##Entrance related models
 class Entrance(db.Model):
     __tablename__ = 'entrances'
     id = db.Column(db.Integer, primary_key=True)
@@ -126,6 +144,22 @@ class Vehicle_type(db.Model):
         else:
             return None
 
+    #returns the contents of table vehicle_types
+    @classmethod
+    def get_vehicle_types(cls):
+        return cls.query.all()
+
+    #returns a list of all Vehicle_type.vehicle_type strings
+    @classmethod
+    def get_vehicle_types_list(cls):
+        query = cls.get_vehicle_types()
+        vehicle_type_list = []
+        for vt in query:
+            vehicle_type_list.append(vt.vehicle_type)
+        return vehicle_type_list
+
+
+    #TODO: this is replicated in Country and Municipality (rework)
     #returns the string cleaned for vehicle_type or "invalid" when not found
     @classmethod
     def clean_str(cls,word):
@@ -158,14 +192,19 @@ class Vehicle_type_alias(db.Model):
         self.alias = alias
         self.vehicle_type = vehicle_type
 
+    #TODO: this is replicated on all alias classes (rework)
     @classmethod
     def is_alias(cls, word, vehicle_type):
-        alias_list = cls.query.filter(vehicle_type == vehicle_type).all()
+        alias_obj_list = cls.query.filter(vehicle_type == vehicle_type).all()
+
+        alias_list = []
+        for alias in alias_obj_list:
+            alias_list.append(alias.alias)
 
         if alias_list:
             if word not in alias_list:
                 for alias in alias_list:
-                    if is_typo(word,alias.alias):
+                    if is_typo(word,alias):
                         return True
                 else:
                     return False
@@ -173,20 +212,6 @@ class Vehicle_type_alias(db.Model):
                 return True
         else:
             return False
-
-
-class Gate(db.Model):
-    __tablename__ = 'gates'
-    id = db.Column(db.Integer, primary_key=True)
-    gate = db.Column(db.String(20), nullable=False)
-    report = db.relationship("Report", backref="gate", lazy="dynamic")
-
-    def __init__(self, gate):
-        self.gate = gate
-
-    @classmethod
-    def get_gate(cls,g):
-        return cls.query.filter(cls.gate == g).one()
 
 
 class Country(db.Model):
@@ -199,14 +224,39 @@ class Country(db.Model):
     def __init__(self,country):
         self.country = country
 
-    #TODO:when c == "" validate ocordingly
     @classmethod
     def get_country(cls,c):
-        if c == "":
-            return cls.query.filter(cls.country == "Portugal").one()
-        else:
-            return cls.query.filter(cls.country == c).one()
+        return cls.query.filter(cls.country == c).one()
 
+    @classmethod
+    def get_countries_list(cls):
+        query = cls.query.all()
+        country_list = []
+        for country in query:
+            country_list.append(country.country)
+        return country_list
+
+    #TODO: this is replicated on Municipality and Vehicle_type (rework)
+    #returns the string cleaned for country or "invalid" when not found
+    @classmethod
+    def clean_str(cls,word):
+        country_obj_list = cls.query.all()
+
+        country_list = []
+        for c in country_obj_list:
+            country_list.append(c.country)
+
+        if word in country_list:
+            return word
+        else:
+            for country in country_list:
+                if is_typo(word,country):
+                    return country
+                else:
+                    if Country_alias.is_alias(word,country):
+                        return country
+            else:
+                return "invalid"
 
 class Country_alias(db.Model):
     __tablename__ = 'country_alias'
@@ -214,6 +264,26 @@ class Country_alias(db.Model):
     alias = db.Column(db.String(50), nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
 
+    #TODO: this is replicated on all alias classes (rework)
+    @classmethod
+    def is_alias(cls, word, country):
+        alias_obj_list = cls.query.filter(country == country).all()
+
+        alias_list = []
+        for alias in alias_obj_list:
+            alias_list.append(alias.alias)
+
+        if alias_list:
+            if word not in alias_list:
+                for alias in alias_list:
+                    if is_typo(word,alias):
+                        return True
+                else:
+                    return False
+            else:
+                return True
+        else:
+            return False
 
 class Municipality(db.Model):
     __tablename__ = 'municipalities'

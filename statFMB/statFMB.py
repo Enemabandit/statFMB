@@ -96,14 +96,19 @@ def upload():
         uploaded_files = request.files.getlist("file[]")
         upload_results = update_database(uploaded_files)
 
-        for result in upload_results:
-            print (result)
-            for l in upload_results[result]:
-                print (l)
+        vt_list = Vehicle_type.get_vehicle_types_list()
+        c_list = Country.get_countries_list()
+
+        print(c_list)
+        return render_template("upload.html",
+                               upload_results = upload_results,
+                               vt_list = vt_list,
+                               c_list = c_list,
+        )
 
     else:
         #TODO:handle file error warning
         print("!!err uploading file")
         render_template("upload.html")
 
-    return render_template("upload.html")
+    return redirect("/")
