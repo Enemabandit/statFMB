@@ -56,7 +56,7 @@ def insert_municipalities_and_alias():
             read_list.append(row)
 
     municipalities_dict = defaultdict(list)
-    for entry in read_list:
+    for entry in sorted(read_list):
         municipality = entry[3]
         parish = entry[5]
         municipalities_dict[municipality].append(parish)

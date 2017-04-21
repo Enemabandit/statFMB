@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
 
+
 app=Flask(__name__)
 ##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
@@ -14,6 +15,7 @@ db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
 from .models import *
+from .upload import update_database, save_corrections
 
 ###Website structure
 @app.route('/',methods=['GET','POST'])
@@ -75,7 +77,6 @@ def index():
     #from .db_create import create_tables
     #create_tables()
 
-
     return render_template("index.html",
                            date_warning = False,
                            upper_date = upper_date,
@@ -90,7 +91,6 @@ def charts():
 #TODO: handle error when user doesn't select file
 @app.route('/upload',methods=['GET','POST'])
 def upload():
-    from .upload import update_database
 
     if request.method == 'POST' and 'file[]' in request.files:
         uploaded_files = request.files.getlist("file[]")
@@ -115,17 +115,54 @@ def upload():
     return redirect("/")
 
 #TODO: create a way to save failed entrances and forget button
-#TODO: rethink how the form posts the data
-#TODO: need to rework javascript validations
+#TODO: rethink how the form posts the data see(JSON)
 @app.route('/upload/finalize',methods=['GET','POST'])
 def upload_finalize():
 
     if request.method == 'POST':
+        #the form gives a number of lists with the data needed
+        #get entrance values
         vt_list = request.form.getlist("vt")
         c_list = request.form.getlist("c")
         m_list = request.form.getlist("m")
         p_list = request.form.getlist("p")
-        r_list = request.form.getlist("r")
+        #get report list and number of entrances from each
+        r_list = request.form.getlist("reports")
+        ne_list = request.form.getlist("num_entrances")
+        #get the failed values to insert in alias tables
+        vt_failed_list = request.form.getlist("vt_failed")
+        c_failed_list = request.form.getlist("c_failed")
+        m_failed_list = request.form.getlist("m_failed")
+
+        corrections_made = {}
+        #places the current index being read
+        index_bound = 0
+        #iterates the lists to create a dict containing the data
+        for i, report_id in enumerate(r_list):
+            entrance = {}
+            entrances_list = []
+            for j in range(int(ne_list[i])):
+                vehicle_type = vt_list[j + index_bound]
+                vehicle_type_failed = vt_failed_list[j + index_bound]
+                country = c_list[j + index_bound]
+                country_failed = c_failed_list[j + index_bound]
+                municipality = m_list[j + index_bound]
+                municipality_failed = m_failed_list[j + index_bound]
+                passengers = p_list[j+ index_bound]
+                #TODO: this should be a subclass of Entrance
+                entrance = {"vehicle_type" : vehicle_type,
+                            "vehicle_type_failed" : vehicle_type_failed,
+                            "country" : country,
+                            "country_failed" : country_failed,
+                            "municipality" : municipality,
+                            "municipality_failed" : municipality_failed,
+                            "passengers" : passengers
+                }
+                entrances_list.append(entrance)
+
+            index_bound += int(ne_list[i])
+            corrections_made[report_id] = entrances_list
+        save_corrections(corrections_made)
 
     return redirect('/')
 

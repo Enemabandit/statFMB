@@ -27,8 +27,14 @@
           <div class="row">
               <div class ="panel-group">
 
-                  <form method="POST" action="/upload/finalize">
+                  <form method="POST" action="/upload/finalize"
+                        enctype="application/json">
                   {% for result in upload_results %}
+
+                      <input type="hidden"
+                             name="report[{{ loop.index0 }}]"
+                             value = {{ upload_results[result][0].id }} />
+
                   <div class="panel panel-info">
                       <div class="panel-heading">
                           <div class="row">
@@ -54,13 +60,6 @@
                       {% for invalid_entry in upload_results[result][2] %}
                       <div class="panel-body">
 
-                          <input type="hidden" name="vt_failed"
-                                 value="{{ invalid_entry[0] }}" />
-                          <input type="hidden" name="c_failed"
-                                 value="{{ invalid_entry[2] }}" />
-                          <input type="hidden" name="m_failed"
-                                 value="{{ invalid_entry[3] }}" />
-
                           <div class="form-group">
                               <label  class="col-md-2 control-label" for="vt">
                                   <h5>Viatura lida:
@@ -73,39 +72,39 @@
                                   if vt == invalid_entry[0] %}
 
                                   <select class="form-control" id="vt"
-                                          name="vt"
+                                          name="report[{{loop.index0}}][0]"
                                           disabled>
                                       <option selected="selected"
-                                              value="{{ vt }}">
+                                              value={{ vt }}>
                                           {{ vt }}
                                       </option>
                                   </select>
-                                  <input type="hidden" name="vt"
-                                         value="{{ vt }}" />
+                                  <input type="hidden"
+                                         name="report[{{ loop.index0 }}][0]"
+                                         value={{ vt }} />
 
                                   {% else %}
 
                                   <select class="form-control" id="vt"
-                                          name="vt"
+                                          name="report[{{ loop.index0 }}][0]"
                                           required>
                                       <option disabled selected value>
                                           CORRIGIR
                                       </option>
                                       {% for vt in vt_list %}
-                                      <option value="{{ vt }}">
+                                      <option value={{ vt }}>
                                           {{ vt }}
                                       </option>
                                       {% endfor%}
                                   </select>
                                   {% endfor %}
                               </div>
-                              <input type="hidden" name="vt_error"
-                                     value = "{{ invalid_entry[0] }}" />
-
                           </div>
 
-                          <input type="hidden" name="p"
-                                 value="{{ invalid_entry[1] }}" />
+                          <input type="hidden"
+                                 name="report[{{ loop.index0 }}][1]"
+                                 value={{ invalid_entry[1] }} />
+
 
                           <div class="form-group">
                               <label  class="col-md-2 control-label" for="c">
@@ -117,34 +116,34 @@
                                   {% for c in c_list
                                   if c == invalid_entry[2]
                                   and invalid_entry[2] != "N/A" %}
-                                  <select class="form-control" id="c" name="c"
+                                  <select class="form-control" id="c"
+                                          name="report[{{ loop.index0 }}][2]"
                                           disabled>
                                       <option selected="selected"
-                                              value="{{ c }}">
+                                              value={{ c }}>
                                           {{ c }}
                                       </option>
                                   </select>
-                                  <input type="hidden" name="c"
-                                         value="{{ c }}" />
+                                  <input type="hidden"
+                                         name="report[{{ loop.index }}][2]"
+                                         value={{ c }} />
                                   {% else %}
+                                  <select class="form-control" id="c"
+                                          name="report[{{ loop.index0 }}][2]"
+                                          required>
 
                                       {% if invalid_entry[2] != "N/A" %}
-                                  <select class="form-control" id="c" name="c"
-                                          required>
                                       <option disabled selected value>
                                           CORRIGIR
                                       </option>
                                       {% else %}
-                                      <select class="form-control" id="c"
-                                              name="c">
-                                          <option selected ="selected"
-                                                  value="N/A">
+                                      <option disabled selected value>
                                           N/A
                                       </option>
                                       {% endif %}
 
                                       {% for c in c_list %}
-                                      <option value="{{ c }}">
+                                      <option value={{ c }}>
                                           {{ c }}
                                       </option>
                                       {% endfor%}
@@ -164,33 +163,34 @@
                                   {% for m in m_list
                                   if m == invalid_entry[3]
                                   and invalid_entry[3] != "N/A" %}
-                                  <select class="form-control" id="m" name="m"
+                                  <select class="form-control" id="m"
+                                          name="report[{{ loop.index0 }}][3]"
                                           disabled>
                                       <option selected="selected"
-                                              value="{{ m }}">
+                                              value={{ m }}>
                                           {{ m }}
                                       </option>
                                   </select>
-                                  <input type="hidden" name="m"
-                                         value="{{ m }}" />
+                                  <input type="hidden"
+                                         name="report[{{ loop.index0 }}][3]"
+                                         value={{ m }} />
                                   {% else %}
+                                  <select class="form-control" id="m"
+                                          name="report[{{ loop.index0 }}][3]"
+                                          required>
 
                                       {% if invalid_entry[3] != "N/A" %}
-                                  <select class="form-control" id="m" name="m"
-                                          required>
                                       <option disabled selected value>
                                           CORRIGIR
                                       </option>
                                       {% else %}
-                                  <select class="form-control" id="m" name="m">
-                                      <option selected="selected"
-                                              value ="N/A">
+                                      <option disabled selected value>
                                           N/A
                                       </option>
                                       {% endif %}
 
                                       {% for m in m_list %}
-                                      <option value="{{ m }}">
+                                      <option value={{ m }}>
                                           {{ m }}
                                       </option>
                                       {% endfor%}
@@ -202,10 +202,6 @@
 
                       </div>
                       {% endfor %}
-                      <input type="hidden" name="reports"
-                             value = {{ upload_results[result][0].id }} />
-                      <input type="hidden" name="num_entrances"
-                             value = {{ upload_results[result][2]|length }} />
 
                   </div>
                   {% endfor %}

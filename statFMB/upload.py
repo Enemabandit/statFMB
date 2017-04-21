@@ -3,7 +3,7 @@ from datetime import date
 from openpyxl import load_workbook, worksheet
 
 from .statFMB import db, Report
-from .models import Entrance, Shift, Gate, Vehicle_type, Country, Municipality
+from .models import *
 
 #TODO: error views for upload, read sheets, date, gate, shift, report
 #TODO: create a pending entrances, mainly for email script but also
@@ -99,9 +99,58 @@ def upload_file(new_file):
     for entrance in entrance_obj_list:
         db.session.add(entrance)
     db.session.commit()
-    print("database updated with: {}".format(new_file.filename))
+    print("database updated for: {} with report id: {}"
+          .format(new_file.filename,report.id))
 
     return report, entrance_obj_list, error_list
+
+
+def save_corrections(saved_corrections):
+    #append entrances to report
+    for report_id in saved_corrections:
+        report = Report.get_report_by_id(report_id)
+        for entry in saved_corrections[report_id]:
+            vehicle_type_obj = Vehicle_type.get_vehicle_type(
+                entry["vehicle_type"])
+            country_obj = Country.get_country(entry["country"])
+            municipality_obj = Municipality.get_municipality(
+                entry["municipality"])
+
+            entrance_obj = Entrance(report = report,
+                                    vehicle_type = vehicle_type_obj,
+                                    passengers = int(entry["passengers"]),
+                                    country = country_obj,
+                                    municipality = municipality_obj)
+            db.session.add(entrance_obj)
+
+            #TODO: test if alias is already on the alias table
+            if vehicle_type_obj.vehicle_type != entry["vehicle_type_failed"]:
+                vehicle_type_alias_obj = Vehicle_type_alias(
+                    alias = entry["vehicle_type_failed"],
+                    vehicle_type = vehicle_type_obj)
+                db.session.add(vehicle_type_alias_obj)
+
+            if (entry["country_failed"] != "N/A"
+                and country_obj.country != entry["country_failed"]):
+                country_alias_obj = Country_alias(
+                    alias = entry["country_failed"],
+                    country = country_obj)
+                db.session.add(country_alias_obj)
+
+            if (entry["municipality_failed"] != "N/A"
+                and municipality_obj.municipality
+                != entry["municipality_failed"]):
+                municipality_alias_obj = Municipality_alias(
+                    alias = entry["municipality_failed"],
+                    municipality = municipality_obj)
+                db.session.add(municipality_alias_obj)
+
+
+
+
+    db.session.commit()
+
+    return
 
 
 def get_shift(sheet):

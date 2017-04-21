@@ -12,4 +12,3 @@ def is_typo(s1, s2):
             return True
     else:
         return False
-

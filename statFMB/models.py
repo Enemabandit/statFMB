@@ -6,9 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 from .statFMB import db
 from .modules.utils import is_typo
 
-#TODO: create class to deal with Entrance atributes and alias
-###Database models
-## Report related models
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
@@ -129,6 +126,7 @@ class Entrance(db.Model):
     def get_entrances_of_report(cls,report):
         return cls.query.filter(cls.report == report).all()
 
+
 class Vehicle_type(db.Model):
     __tablename__ = 'vehicle_types'
     id = db.Column(db.Integer, primary_key=True)
@@ -201,7 +199,9 @@ class Vehicle_type_alias(db.Model):
     #TODO: this is replicated on all alias classes (rework)
     @classmethod
     def is_alias(cls, word, vehicle_type):
-        alias_obj_list = cls.query.filter(vehicle_type == vehicle_type).all()
+        alias_obj_list = cls.query.filter(
+            cls.vehicle_type
+            == Vehicle_type.get_vehicle_type(vehicle_type)).all()
 
         alias_list = []
         for alias in alias_obj_list:
@@ -265,6 +265,8 @@ class Country(db.Model):
                 return "invalid"
 
 
+#TODO: not considering E.U.América as alias for some reason
+#      needs further testing
 class Country_alias(db.Model):
     __tablename__ = 'country_alias'
     id = db.Column(db.Integer, primary_key=True)
@@ -274,7 +276,8 @@ class Country_alias(db.Model):
     #TODO: this is replicated on all alias classes (rework)
     @classmethod
     def is_alias(cls, word, country):
-        alias_obj_list = cls.query.filter(country == country).all()
+        alias_obj_list = cls.query.filter(
+            cls.country == Country.get_country(country)).all()
 
         alias_list = []
         for alias in alias_obj_list:
@@ -333,7 +336,7 @@ class Municipality(db.Model):
                 if is_typo(word,municipality):
                     return municipality
                 else:
-                    if municipality_alias.is_alias(word,municipality):
+                    if Municipality_alias.is_alias(word,municipality):
                         return municipality
             else:
                 return "invalid"
@@ -353,7 +356,9 @@ class Municipality_alias(db.Model):
     #TODO: this is replicated on all alias classes (rework)
     @classmethod
     def is_alias(cls, word, municipality):
-        alias_obj_list = cls.query.filter(municipality = municipality).all()
+        alias_obj_list = cls.query.filter(
+            cls.municipality
+            == Municipality.get_municipality(municipality)).all()
 
         alias_list = []
         for alias in alias_obj_list:
