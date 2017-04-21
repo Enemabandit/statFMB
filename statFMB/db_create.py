@@ -27,7 +27,7 @@ def insert_vehicle_types():
 
 def insert_countries():
     country_list = []
-    with open('static/resources/country_list.csv','rt',
+    with open('statFMB/static/resources/country_list.csv','rt',
               encoding ="ISO-8859-1") as country_csv:
         reader = csv.reader(country_csv)
         for row in reader:
@@ -49,7 +49,7 @@ def insert_municipalities_and_alias():
 
     read_list = []
     #read table from file
-    with open('static/resources/municipality_list.csv', 'rt',
+    with open('statFMB/static/resources/municipality_list.csv', 'rt',
               encoding = "ISO-8859-1") as f:
         reader = csv.reader(f, delimiter=',', quoting=csv.QUOTE_NONE)
         for row in reader:

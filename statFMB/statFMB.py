@@ -98,12 +98,13 @@ def upload():
 
         vt_list = Vehicle_type.get_vehicle_types_list()
         c_list = Country.get_countries_list()
+        m_list = Municipality.get_municipalities_list()
 
-        print(c_list)
         return render_template("upload.html",
                                upload_results = upload_results,
                                vt_list = vt_list,
                                c_list = c_list,
+                               m_list = m_list,
         )
 
     else:
@@ -112,3 +113,21 @@ def upload():
         render_template("upload.html")
 
     return redirect("/")
+
+#TODO: create a way to save failed entrances and forget button
+#TODO: rethink how the form posts the data
+#TODO: need to rework javascript validations
+@app.route('/upload/finalize',methods=['GET','POST'])
+def upload_finalize():
+
+    if request.method == 'POST':
+        vt_list = request.form.getlist("vt")
+        c_list = request.form.getlist("c")
+        m_list = request.form.getlist("m")
+        p_list = request.form.getlist("p")
+        r_list = request.form.getlist("r")
+
+    return redirect('/')
+
+if __name__ == "__main__":
+    app.run()

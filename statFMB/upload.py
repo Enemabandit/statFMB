@@ -1,7 +1,9 @@
-from openpyxl import load_workbook, worksheet
 from datetime import date
-from .statFMB import (db, Report, Entrance, Shift, Gate,
-                      Vehicle_type, Country, Municipality)
+
+from openpyxl import load_workbook, worksheet
+
+from .statFMB import db, Report
+from .models import Entrance, Shift, Gate, Vehicle_type, Country, Municipality
 
 #TODO: error views for upload, read sheets, date, gate, shift, report
 #TODO: create a pending entrances, mainly for email script but also
@@ -79,15 +81,25 @@ def upload_file(new_file):
         passengers += entrance.passengers
 
     print ("All instances Created, updating database!")
-    if Report.is_eligible(date,shift):
-        db.session.add(report)
-        for entrance in entrance_obj_list:
-            db.session.add(entrance)
-        db.session.commit()
-        print("database updated for: {}".format(new_file.filename))
-    else:
-        #TODO: implement override
-        print("Override not implemented")
+
+    if not Report.is_eligible(date,shift,gate):
+        report_old = Report.get_report(date,gate)
+        entrances_old = Entrance.get_entrances_of_report(report_old)
+
+        print("Report already exists in the database, replacing!")
+        print("==> NOTE: this deletes the TAIL of report for each day and gate")
+        print("==> {} entrances deleted!".format(len(entrances_old)))
+        print("==> Report {} deleted!".format(report_old.id))
+
+        for entrance in entrances_old:
+            db.session.delete(entrance)
+        db.session.delete(report_old)
+
+    db.session.add(report)
+    for entrance in entrance_obj_list:
+        db.session.add(entrance)
+    db.session.commit()
+    print("database updated with: {}".format(new_file.filename))
 
     return report, entrance_obj_list, error_list
 
@@ -150,9 +162,16 @@ def get_entrance_list(sheet,report):
                   "(hóspedes, reuniões, outros)"
     interval = find_row_interval(sheet, col_number,
                                  upper_bound, lower_bound)
+
+    vehicle_types_list = Vehicle_type.get_vehicle_types_list()
+    countries_list = Country.get_countries_list()
+    municipalities_list = Municipality.get_municipalities_list()
+
     entrance_obj_list = []
     error_list = []
 
+    #NOTE: interval[0]+2 and interval[1]-1 are related to the way the file is
+    #      formated
     for row in sheet.iter_rows(min_row=interval[0]+2,
                                max_row=interval[1]-1,
                                max_col=19):
@@ -162,21 +181,36 @@ def get_entrance_list(sheet,report):
             if row[6].value: passengers = row[6].value
             else: passengers = 0
 
-            #TODO: VALIDATE
-            if row[12].value:
+            ## Municipality validation
+            if row[18].value:
+                municipality = Municipality.clean_str(
+                    row[18].value.capitalize())
+                if municipality == "invalid":
+                    municipality = row[18].value.capitalize()
+            else:
+                #NOTE: this sets de default for ""
+                municipality = "N/A"
+
+            #Country vaidation
+            #if municipality is set, country must be "Portugal"
+            if municipality != "N/A":
+                country = "Portugal"
+            elif row[12].value:
                 country = Country.clean_str(row[12].value.capitalize())
                 if country == "invalid":
                     country = row[12].value
             else:
-                #NOTE: this sets de default for "" as Portugal
-                country = "Portugal"
-
-            #TODO: VALIDATE
-            if row[18].value: municipality = row[18].value.capitalize()
-            else: municipality = ""
+                #NOTE: this sets de default for ""
+                country = "N/A"
 
             #test if everything is valid
-            if vehicle_type != "invalid" and country != "N/A" and municipality != "":
+            if (vehicle_type in vehicle_types_list
+                and (country in countries_list
+                     and country != "N/A")
+                and (municipality in municipalities_list
+                     and municipality != "N/A"
+                     or (municipality == "N/A" and country != "Portugal"))):
+
                 entrance = Entrance(passengers = passengers,
                                     report = report,
                                     vehicle_type = Vehicle_type

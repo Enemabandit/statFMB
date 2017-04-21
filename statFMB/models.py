@@ -19,18 +19,30 @@ class Report(db.Model):
     gate_id = db.Column(db.Integer, db.ForeignKey('gates.id'))
     shift_id = db.Column(db.Integer, db.ForeignKey('shifts.id'))
 
-    entrance = db.relationship("Entrance", backref="report", lazy="dynamic")
+    entrance = db.relationship("Entrance",
+                               backref=db.backref("report"),
+                               lazy="dynamic")
 
     def __repr__(self):
         return '<Report {} - {} - {}'.format(self.id,self.date ,self.gate)
 
-    #TODO: this logic is not working!!!!!!!!!!!!!!!!!!!!!!
-    #      cls.date == input_date not working
-    #      Report.date is no acepting the date in the constructor
+    #TODO: this overrides the last report, if more than one (rework)
     @classmethod
-    def is_eligible(cls,input_date,input_shift):
+    def get_report(cls,date,gate):
+        report = cls.query.filter(cls.date == date,
+                                 cls.gate == gate,
+                                 ).first()
+        return report
 
-        query = cls.query.filter(cls.date == input_date).all()
+    @classmethod
+    def get_report_by_id(cls,report_id):
+        return cls.query.filter(cls.id == report_id).one()
+
+    @classmethod
+    def is_eligible(cls,input_date,input_shift,input_gate):
+
+        query = cls.query.filter(cls.date == input_date,
+                                 cls.gate == input_gate).all()
         #query always gets at least 1, wich is the on we are uploading
         if len(query) > 1:
             if len(query) < 3 and input_shift.shift == "Meio":
@@ -110,18 +122,12 @@ class Entrance(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
     municipality_id = db.Column(db.Integer, db.ForeignKey('municipalities.id'))
 
-    """
-    def __init__(self,n_persons,report,vehicle_type,country,municipality):
-        self.n_persons = n_persons
-        self.report = report
-        self.vehicle_type = vehicle_type
-        self.country = country
-        self.municipality = municipality
-    """
-
     def __repr__(self):
         return '<Entrance {}'.format(self.id)
 
+    @classmethod
+    def get_entrances_of_report(cls,report):
+        return cls.query.filter(cls.report == report).all()
 
 class Vehicle_type(db.Model):
     __tablename__ = 'vehicle_types'
@@ -258,6 +264,7 @@ class Country(db.Model):
             else:
                 return "invalid"
 
+
 class Country_alias(db.Model):
     __tablename__ = 'country_alias'
     id = db.Column(db.Integer, primary_key=True)
@@ -285,6 +292,7 @@ class Country_alias(db.Model):
         else:
             return False
 
+
 class Municipality(db.Model):
     __tablename__ = 'municipalities'
     id = db.Column(db.Integer, primary_key=True)
@@ -296,13 +304,39 @@ class Municipality(db.Model):
     def __init__(self,municipality):
         self.municipality = municipality
 
-    #TODO:when m == "" validate ocordingly
     @classmethod
     def get_municipality(cls,m):
-        if m == "":
-            return cls.query.filter(cls.municipality == "Lisboa").one()
+        return cls.query.filter(cls.municipality == m).one()
+
+    @classmethod
+    def get_municipalities_list(cls):
+        query = cls.query.all()
+        municipalities_list = []
+        for municipality in query:
+            municipalities_list.append(municipality.municipality)
+        return municipalities_list
+
+    #TODO: this is replicated on Country and Vehicle_type (rework)
+    #returns the string cleaned for municipality or "invalid" when not found
+    @classmethod
+    def clean_str(cls,word):
+        municipality_obj_list = cls.query.all()
+
+        municipality_list = []
+        for m in municipality_obj_list:
+            municipality_list.append(m.municipality)
+
+        if word in municipality_list:
+            return word
         else:
-            return cls.query.filter(cls.municipality == m).one()
+            for municipality in municipality_list:
+                if is_typo(word,municipality):
+                    return municipality
+                else:
+                    if municipality_alias.is_alias(word,municipality):
+                        return municipality
+            else:
+                return "invalid"
 
 
 class Municipality_alias(db.Model):
@@ -314,6 +348,28 @@ class Municipality_alias(db.Model):
     def __init__(self,alias,municipality):
         self.alias = alias
         self.municipality = municipality
+
+
+    #TODO: this is replicated on all alias classes (rework)
+    @classmethod
+    def is_alias(cls, word, municipality):
+        alias_obj_list = cls.query.filter(municipality = municipality).all()
+
+        alias_list = []
+        for alias in alias_obj_list:
+            alias_list.append(alias.alias)
+
+        if alias_list:
+            if word not in alias_list:
+                for alias in alias_list:
+                    if is_typo(word,alias):
+                        return True
+                else:
+                    return False
+            else:
+                return True
+        else:
+            return False
 
 
 ###END OF DB.MODELS
