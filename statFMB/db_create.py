@@ -34,6 +34,7 @@ def insert_countries():
             country_list.append(row[0])
 
     country_list.sort()
+    country_list.append("N/A")
 
     country_obj_list = []
     for country in country_list:
@@ -56,10 +57,11 @@ def insert_municipalities_and_alias():
             read_list.append(row)
 
     municipalities_dict = defaultdict(list)
-    for entry in sorted(read_list):
+    for entry in read_list.sort(key= lambda x: x[3]):
         municipality = entry[3]
         parish = entry[5]
         municipalities_dict[municipality].append(parish)
+    municipalities_dict["N/A"].append("N/A")
 
     municipality_obj_list = []
     parish_obj_list = []

@@ -196,6 +196,14 @@ class Vehicle_type_alias(db.Model):
         self.alias = alias
         self.vehicle_type = vehicle_type
 
+    @classmethod
+    def get_alias_list(cls):
+        alias_obj_list = cls.query.all()
+        alias_list = []
+        for alias in alias_obj_list:
+            alias_list.append(alias.alias)
+        return alias_list
+
     #TODO: this is replicated on all alias classes (rework)
     @classmethod
     def is_alias(cls, word, vehicle_type):
@@ -266,12 +274,20 @@ class Country(db.Model):
 
 
 #TODO: not considering E.U.América as alias for some reason
-#      needs further testing
+#      needs further testing, (maybe use of capitalize on checks?)
 class Country_alias(db.Model):
     __tablename__ = 'country_alias'
     id = db.Column(db.Integer, primary_key=True)
     alias = db.Column(db.String(50), nullable=False)
     country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
+
+    @classmethod
+    def get_alias_list(cls):
+        alias_obj_list = cls.query.all()
+        alias_list = []
+        for alias in alias_obj_list:
+            alias_list.append(alias.alias)
+        return alias_list
 
     #TODO: this is replicated on all alias classes (rework)
     @classmethod
@@ -352,6 +368,13 @@ class Municipality_alias(db.Model):
         self.alias = alias
         self.municipality = municipality
 
+    @classmethod
+    def get_alias_list(cls):
+        alias_obj_list = cls.query.all()
+        alias_list = []
+        for alias in alias_obj_list:
+            alias_list.append(alias.alias)
+        return alias_list
 
     #TODO: this is replicated on all alias classes (rework)
     @classmethod
