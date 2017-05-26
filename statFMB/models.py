@@ -521,7 +521,7 @@ class Search():
                     top_municipalities[entrance.municipality.municipality] += (
                         entrance.passengers)
 
-        return {"gates": top_gates,
+        return {"gates": top_gates.most_common(3),
                 "countries": top_countries.most_common(5),
                 "municipalities": top_municipalities.most_common(5)}
 

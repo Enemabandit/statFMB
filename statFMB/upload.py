@@ -16,56 +16,90 @@ from .models import *
 def update_database(new_files):
 
     upload_results = {}
+    failed_uploads = {}
     for new_file in new_files:
 
-        report, entrance_obj_list, error_list = upload_file(new_file)
-        upload_results[new_file.filename] = [report,
-                                             entrance_obj_list,
-                                             error_list]
+        report, entrance_obj_list, error_list, error_msg = upload_file(new_file)
+        if report != "error":
+            upload_results[new_file.filename] = [report,
+                                                 entrance_obj_list,
+                                                 error_list]
+        else:
+            failed_uploads[new_file.filename] = error_msg
 
-    return upload_results
+    return upload_results, failed_uploads
 
 
 def upload_file(new_file):
     print("inserting: {} in database.".format(new_file.filename))
 
     ##load uploaded file and sheets
-    if new_file.filename[-4:] == ".xls":
-        wb = open_xls_as_xlsx(new_file)
-    else:
-        wb = load_workbook(new_file, read_only = True, data_only = True)
+    try:
+        if new_file.filename[-4:] == ".xls":
+            wb = open_xls_as_xlsx(new_file)
+        else:
+            wb = load_workbook(new_file, read_only = True, data_only = True)
+    except Exception as err:
+        print (err)
+        return "error",[],[],"Ficheiro inválido"
 
-    statSheet = wb.get_sheet_by_name("Estatística")
-    regSheet = wb.get_sheet_by_name("Folha de Registo")
+    try:
+        statSheet = wb.get_sheet_by_name("Estatística")
+        regSheet = wb.get_sheet_by_name("Folha de Registo")
+    except Exception as err:
+        print(err)
+        return "error",[],[],"Nome das folhas inválido"
+
 
     ##date
-    date = format_date(regSheet['C6'].value)
-    print("==> date: {}".format(date))
+    try:
+        date = format_date(regSheet['C6'].value)
+        print("==> date: {}".format(date))
+    except Exception as err:
+        print (err)
+        return "error",[],[],"Data inválida"
 
     ##gate
-    gate_str = regSheet['A4'].value.rsplit(' ',1)[-1].capitalize()
-    if gate_str not in ["Ameias","Serpa","Rainha"]:
-        #TODO: error views
-        print("==>could not find gate!")
-    print ("==> Gate: " + gate_str)
-    gate = Gate.get_gate(gate_str)
+    try:
+        gate_str = regSheet['A4'].value.rsplit(' ',1)[-1].capitalize()
+        print ("==> Gate: " + gate_str)
+        gate = Gate.get_gate(gate_str)
+    except Exception as err:
+        print (err)
+        return "error",[],[],"Porta inválida"
 
     ##shift
-    shift_str = get_shift(regSheet)
-    print ("==> Shift: " + shift_str)
-    shift = Shift.get_shift(shift_str)
+    try:
+        shift_str = get_shift(regSheet)
+        print ("==> Shift: " + shift_str)
+        shift = Shift.get_shift(shift_str)
+    except Exception as err:
+        print(err)
+        return "error",[],[],"Hora inválida"
 
     ##total_vehicles
-    total_vehicles = get_total_vehicles(regSheet)
-    print ("==> Vehicles: " + str(total_vehicles))
+    try:
+        total_vehicles = get_total_vehicles(regSheet)
+        print ("==> Vehicles: " + str(total_vehicles))
+    except Exception as err:
+        print (err)
+        return "error",[],[],"Numero de veículos inválido"
 
     #pawns
-    pawns = get_pawns(statSheet)
-    print ("==> Pawns: " + str(pawns))
+    try:
+        pawns = get_pawns(statSheet)
+        print ("==> Pawns: " + str(pawns))
+    except Exception as err:
+        print (err)
+        return "error",[],[],"Numero de pessoas a pé inválido"
 
     #bicicles
-    bicicles = get_bicicles(statSheet)
-    print ("==> Bicicles: " + str(bicicles))
+    try:
+        bicicles = get_bicicles(statSheet)
+        print ("==> Bicicles: " + str(bicicles))
+    except Exception as err:
+        print (err)
+        return "error",[],[],"Numero de bicicletas inválido"
 
     report = Report(date = date,
                     vehicles = total_vehicles,
@@ -110,7 +144,9 @@ def upload_file(new_file):
     print("database updated for: {} with report id: {}"
           .format(new_file.filename,report.id))
 
-    return report, entrance_obj_list, error_list
+    error_message = ""
+
+    return report, entrance_obj_list, error_list, error_message
 
 
 def save_corrections(saved_corrections):
@@ -329,11 +365,7 @@ def format_date(d):
         #return error
         print("error spliting date")
 
-    try:
-        formated_date = date(int(d_list[2]),int(d_list[1]),int(d_list[0]))
-    except ValueError:
-        #TODO:error views
-        print("could not find date!")
+    formated_date = date(int(d_list[2]),int(d_list[1]),int(d_list[0]))
 
     return formated_date
 

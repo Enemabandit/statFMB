@@ -5,15 +5,43 @@
 
 {% block body%}
 
-<br><br><br>
-<form method="POST" enctype="multipart/form-data" action="/upload">
-    <div class="form-group">
-        <div class="form-group">
-            <input type="file" name="file[]" multiple="">
-        </div>
-        <button type="submit" value="upload"
-                class="btn btn-primary btn-lg">Carregar</button>
+<!-- Page Title -->
+<div class ="container">
+    <div class="page-header">
+        <br>
+        <h1>Carregar Ficheiros   <small>Fundação Mata do Bussaco</small></h1>
     </div>
-</form>
+    <div class="row">
+        <div class ="col-md-6">
+            <h4><b>Recomendações:</b></h4>
+            <p>O website reconhece os relatórios em vigor na data
+                "INSERT LAUNCH DATE HERE" no formato .xls ou .xlsx
+            </p>
+            <p>
+                <a href="FILE TO DOWNLOAD" download="Original.xlsx">
+                    Descarregar exemplar
+                </a>
+            </p>
+            <p>
+                Em caso de problema contactar: 
+                <a href="mailto:maia.coelho.dev@gmail.com">
+                    maia.coelho.dev@gmail.com
+                </a>
+            </p>
+        </div>
+        <div class ="col-md-6">
+        <form method="POST" enctype="multipart/form-data" action="/upload">
+            <div class="form-group">
+                <div class="form-group">
+                    <input type="file" name="file[]" multiple=""
+                           accept=".xls,.xlsx">
+                </div>
+                <button type="submit" value="upload"
+                        class="btn btn-success btn-lg">Carregar</button>
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

@@ -15,6 +15,7 @@ db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
 from .models import *
+from .graphs import *
 from .upload import update_database, save_corrections
 
 ###Website structure
@@ -80,6 +81,11 @@ def index():
 def charts():
     return redirect("/")
 
+#TODO: page to search for one single report
+@app.route('/reports',methods=['GET','POST'])
+def reports():
+    return redirect("/")
+
 
 #TODO: handle error when user doesn't select file
 @app.route('/upload',methods=['GET','POST'])
@@ -87,7 +93,7 @@ def upload():
 
     if request.method == 'POST' and 'file[]' in request.files:
         uploaded_files = request.files.getlist("file[]")
-        upload_results = update_database(uploaded_files)
+        upload_results, failed_uploads = update_database(uploaded_files)
 
         vt_list = Vehicle_type.get_vehicle_types_list()
         c_list = Country.get_countries_list()
@@ -95,6 +101,7 @@ def upload():
 
         return render_template("upload.html",
                                upload_results = upload_results,
+                               failed_uploads = failed_uploads,
                                vt_list = vt_list,
                                c_list = c_list,
                                m_list = m_list,
@@ -103,7 +110,6 @@ def upload():
     return render_template("uploadFiles.html")
 
 #TODO: create a way to save failed entrances and forget button
-#TODO: rethink how the form posts the data see(JSON)
 @app.route('/upload/finalize',methods=['GET','POST'])
 def upload_finalize():
 
