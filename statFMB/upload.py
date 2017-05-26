@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 import xlrd
 from openpyxl import load_workbook, worksheet
@@ -47,6 +47,7 @@ def upload_file(new_file):
     if gate_str not in ["Ameias","Serpa","Rainha"]:
         #TODO: error views
         print("==>could not find gate!")
+    print ("==> Gate: " + gate_str)
     gate = Gate.get_gate(gate_str)
 
     ##shift
@@ -221,13 +222,14 @@ def get_entrance_list(sheet,report):
                      and country != "N/A")
                 and (municipality in municipalities_list
                      and municipality != "N/A"
-                     or (municipality == "N/A" and country != "Portugal"))):
+                     or (municipality == "N/A"
+                         and country != "Portugal"))):
 
                 entrance = Entrance(passengers = passengers,
                                     report = report,
                                     vehicle_type = Vehicle_type
                                     .get_vehicle_type(vehicle_type),
-                                    country = Country.get_country(country),
+                                    country=Country.get_country(country),
                                     municipality = Municipality
                                     .get_municipality(municipality),
                 )
@@ -389,13 +391,13 @@ def open_xls_as_xlsx(filename):
 
     for row in range(1, statSheet_xls_nrows):
         for col in range(1, statSheet_xls_ncols):
-            statSheet.cell(row=row, column=col).value= statSheet_xls.cell_value(
+            statSheet.cell(row=row, column=col).value=statSheet_xls.cell_value(
                 row-1,
                 col-1)
 
     #for row in range(1, obsSheet_xls_nrows):
     #    for col in range(1, obsSheet_xls_ncols):
-    #        obsSheet.cell(row=row, column=col).value = obsSheet_xls.cell_value(
+    #        obsSheet.cell(row=row, column=col).value =obsSheet_xls.cell_value(
     #            row-1,
     #            col-1)
 
@@ -403,11 +405,23 @@ def open_xls_as_xlsx(filename):
     # 3 means 'xldate' , 1 means 'text'
     if regSheet_xls.cell(5,2).ctype == 3:
         date_field = statSheet_xls.cell(5,2).value
-        year, month, day, hour,minute,second=xlrd.xldate_as_tuple(date_field,
-                                                                  book.datemode)
-        regSheet.cell(row=6, column=3).value = "{}/{}/{}".format(day,
-                                                                 month,
-                                                                 year)
+        py_date = datetime(*xlrd.xldate_as_tuple(date_field,book.datemode))
+
+        #this if solves a werid behaviour of xldate_as_tuple()
+        #that swaps the day and month when day <= 12
+        #NOTE:should take a look at xlrd.xldate_as_datetime
+        #   https://github.com/python-excel/xlrd/blob/master/xlrd/xldate.py
+        if py_date.day > 12:
+            regSheet.cell(row=6, column=3).value = "{}/{}/{}".format(
+                py_date.day,
+                py_date.month,
+                py_date.year)
+        else:
+            regSheet.cell(row=6, column=3).value = "{}/{}/{}".format(
+                py_date.month,
+                py_date.day,
+                py_date.year)
+
 
     #opens the xlsx file for debug only
     #path = "/home/enemabandit/lab/FMB/statFMB/statFMB/uploads/TESTEXLS.xlsx"

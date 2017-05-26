@@ -20,7 +20,6 @@ from .upload import update_database, save_corrections
 ###Website structure
 @app.route('/',methods=['GET','POST'])
 def index():
-
     if request.method == 'POST':
         lower_date = request.form['lower_date']
         upper_date = request.form['upper_date']
@@ -35,37 +34,30 @@ def index():
 
 
         gate = request.form['gate']
-        period = request.form['period']
+        period_str = request.form['period']
+        #TODO:the search is not being ordered as it should, need debugin
+        search = Search(lower_date, upper_date, gate, period_str)
 
-        Report.create_search_list(lower_date, upper_date,gate)
+        if search.period_list:
+            sums = search.get_sums()
+            tops = search.get_tops()
 
-        print(Report.search_list)
+            period_list = []
+            if period_str != "Totais":
+                period_list = search.period_list
+            totals = search.get_totals()
 
-        #sum_vehicles = Entrances.get_sum_vehicles()
-        #sum_passengers = Entrances.get_sum_passengers()
-        #sum_pedestrians = Entrances.get_sum_pedestrians()
-
-        #top_gates = Entrances.get_top_gates()
-        #top_countries = Entrances.get_top_countries()
-        #top_municipalities = Entrances.get_top_municipalities()
-
-        #period_list = Entrances.get_period_list()
-        #period_list_totals = Entrances.get_period_list_totals()
-
-        return render_template("index.html",
-                               date_warning = False,
-                               upper_date = upper_date,
-                               lower_date = lower_date,
-                               gate = gate,
-         #                      sum_vehicles = sum_vehicles,
-         #                      sum_passengers = sum_passengers,
-         #                      sum_pedestrians = sum_pedestrians,
-         #                      top_gates = top_gates,
-         #                      top_countries = top_countries,
-         #                      top_municipalities = top_municipalities,
-         #                      period_list = period_list,
-         #                      period_list_totals = period_list_totals,
-        )
+            return render_template("statistics.html",
+                                   date_warning = False,
+                                   search_is_valid = True,
+                                   upper_date = upper_date,
+                                   lower_date = lower_date,
+                                   gate = gate,
+                                   period_str = period_str,
+                                   tops = tops,
+                                   sums = sums,
+                                   period_list = period_list,
+                                   totals = totals,)
 
     ###default route(/)
     #TODO: set lower_date to inauguration date
@@ -77,8 +69,9 @@ def index():
     #from .db_create import create_tables
     #create_tables()
 
-    return render_template("index.html",
+    return render_template("statistics.html",
                            date_warning = False,
+                           is_search = False,
                            upper_date = upper_date,
                            lower_date = lower_date)
 
@@ -107,12 +100,7 @@ def upload():
                                m_list = m_list,
         )
 
-    else:
-        #TODO:handle file error warning
-        print("!!err uploading file")
-        render_template("upload.html")
-
-    return redirect("/")
+    return render_template("uploadFiles.html")
 
 #TODO: create a way to save failed entrances and forget button
 #TODO: rethink how the form posts the data see(JSON)

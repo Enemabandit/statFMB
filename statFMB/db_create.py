@@ -3,6 +3,7 @@ from .models import (Country, Municipality, Municipality_alias,
                      Shift, Gate, Vehicle_type, Vehicle_type_alias)
 import csv
 from collections import defaultdict
+from operator import itemgetter
 
 #create the Database and db tables
 def create_tables():
@@ -57,7 +58,7 @@ def insert_municipalities_and_alias():
             read_list.append(row)
 
     municipalities_dict = defaultdict(list)
-    for entry in read_list.sort(key= lambda x: x[3]):
+    for entry in sorted(read_list, key=itemgetter(3)):
         municipality = entry[3]
         parish = entry[5]
         municipalities_dict[municipality].append(parish)

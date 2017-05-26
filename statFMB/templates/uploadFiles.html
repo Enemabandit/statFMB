@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% from "macros.html" import seach_form %}
+
+{% block title %}Carregar Ficheiros{% endblock %}
+
+{% block body%}
+
+<br><br><br>
+<form method="POST" enctype="multipart/form-data" action="/upload">
+    <div class="form-group">
+        <div class="form-group">
+            <input type="file" name="file[]" multiple="">
+        </div>
+        <button type="submit" value="upload"
+                class="btn btn-primary btn-lg">Carregar</button>
+    </div>
+</form>
+
+{% endblock %}
