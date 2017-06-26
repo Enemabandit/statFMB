@@ -7,7 +7,7 @@ app=Flask(__name__)
 ##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI']= 'mysql://statFMB:statFMB@localhost/test1'
+app.config['SQLALCHEMY_DATABASE_URI']='mysql://statFMB:statFMB@localhost/test1'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
 
@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
 from .models import *
-from .graphs import *
+from .charts import *
 from .upload import update_database, save_corrections
 
 ###Website structure
@@ -24,7 +24,6 @@ def index():
     if request.method == 'POST':
         lower_date = request.form['lower_date']
         upper_date = request.form['upper_date']
-
         #check date range and renders the warning if invalid
         if lower_date > upper_date:
             date_error = True
@@ -33,10 +32,8 @@ def index():
                                    lower_date = date(2001,1,1),
                                    upper_date = date.today())
 
-
         gate = request.form['gate']
         period_str = request.form['period']
-        #TODO:the search is not being ordered as it should, need debugin
         search = Search(lower_date, upper_date, gate, period_str)
 
         if search.period_list:
@@ -46,6 +43,7 @@ def index():
             period_list = []
             if period_str != "Totais":
                 period_list = search.period_list
+
             totals = search.get_totals()
 
             return render_template("statistics.html",
@@ -79,7 +77,36 @@ def index():
 
 @app.route('/charts',methods=['GET','POST'])
 def charts():
-    return redirect("/")
+    if request.method == 'POST':
+        lower_date = request.form['lower_date']
+        upper_date = request.form['upper_date']
+        #check date range and renders the warning if invalid
+        if lower_date > upper_date:
+            date_error = True
+            return render_template("index.html",
+                                   date_warning = True,
+                                   lower_date = date(2001,1,1),
+                                   upper_date = date.today())
+
+        gate = request.form['gate']
+        period_str = request.form['period']
+        search = Search(lower_date, upper_date, gate, period_str)
+        tops = search.get_tops()
+
+        return render_template("charts.html",
+                               lower_date = lower_date,
+                               upper_date = upper_date,
+        )
+
+    ###default route(/)
+    #TODO: set lower_date to inauguration date
+    lower_date = date(2010,1,1)
+    upper_date = date.today()
+
+    return render_template("charts.html",
+                           lower_date = lower_date,
+                           upper_date = upper_date)
+
 
 #TODO: page to search for one single report
 @app.route('/reports',methods=['GET','POST'])

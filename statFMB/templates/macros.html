@@ -1,5 +1,5 @@
-{% macro search_form(lower_date,upper_date,date_warning) %}
-<form class="form-inline text-center" method="POST" action="/">
+{% macro search_form(action, lower_date,upper_date,date_warning) %}
+<form class="form-inline text-center" method="POST" action={{ action }}>
     <div class="form-group">
         <label for="data_inicio">Data de Inicio</label>
         <input type="date" class="form-control" name="lower_date"

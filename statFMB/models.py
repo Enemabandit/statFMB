@@ -5,7 +5,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from .statFMB import db
-from .modules.utils import is_typo 
+from .modules.utils import is_typo
 
 class Report(db.Model):
     __tablename__ = 'reports'
