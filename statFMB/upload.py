@@ -386,7 +386,6 @@ def str_to_int_list(l):
     return new_list
 
 
-#TODO: weird behaviour converting dates on some files (ex.SERPA 06-04.xls)
 def open_xls_as_xlsx(filename):
     # open using xlrd
     book = xlrd.open_workbook(file_contents = filename.read())

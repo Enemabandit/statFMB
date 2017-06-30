@@ -513,7 +513,7 @@ class Search():
         top_municipalities = Counter()
 
         for report in self.report_list:
-            top_gates[report.gate.gate] += report.pawns
+            top_gates[report.gate.gate] += report.pawns + report.bicicles
             for entrance in report.entrances:
                 top_countries[entrance.country.country] += entrance.passengers
                 top_gates[report.gate.gate] += entrance.passengers
@@ -603,7 +603,7 @@ class Period():
         self.bikes = 0
 
         for entrance in self.entrances:
-            if entrance.vehicle_type == "Moto":
+            if entrance.vehicle_type.vehicle_type == "Moto":
                 self.bikes += 1
             elif entrance.vehicle_type.vehicle_type == "Ligeiro":
                 self.lightduty += 1

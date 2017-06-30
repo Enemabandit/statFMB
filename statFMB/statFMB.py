@@ -7,6 +7,7 @@ app=Flask(__name__)
 ##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#change database name(URL) here
 app.config['SQLALCHEMY_DATABASE_URI']='mysql://statFMB:statFMB@localhost/test1'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
@@ -19,6 +20,7 @@ from .charts import *
 from .upload import update_database, save_corrections
 
 ###Website structure
+
 @app.route('/',methods=['GET','POST'])
 def index():
     if request.method == 'POST':
@@ -27,7 +29,7 @@ def index():
         #check date range and renders the warning if invalid
         if lower_date > upper_date:
             date_error = True
-            return render_template("index.html",
+            return render_template("statistics.html",
                                    date_warning = True,
                                    lower_date = date(2001,1,1),
                                    upper_date = date.today())
@@ -46,6 +48,14 @@ def index():
 
             totals = search.get_totals()
 
+            ##DEBUG
+            bikes = 0
+            for period in search.period_list:
+                bikes += period.bikes
+            print (bikes)
+
+
+            ##
             return render_template("statistics.html",
                                    date_warning = False,
                                    search_is_valid = True,
@@ -83,7 +93,7 @@ def charts():
         #check date range and renders the warning if invalid
         if lower_date > upper_date:
             date_error = True
-            return render_template("index.html",
+            return render_template("statistics.html",
                                    date_warning = True,
                                    lower_date = date(2001,1,1),
                                    upper_date = date.today())
@@ -91,11 +101,11 @@ def charts():
         gate = request.form['gate']
         period_str = request.form['period']
         search = Search(lower_date, upper_date, gate, period_str)
-        tops = search.get_tops()
 
         return render_template("charts.html",
                                lower_date = lower_date,
                                upper_date = upper_date,
+                               search = search,
         )
 
     ###default route(/)
@@ -114,7 +124,6 @@ def reports():
     return redirect("/")
 
 
-#TODO: handle error when user doesn't select file
 @app.route('/upload',methods=['GET','POST'])
 def upload():
 

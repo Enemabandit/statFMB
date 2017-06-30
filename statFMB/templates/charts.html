@@ -5,40 +5,185 @@
 
 {% block head %}
 {{ super() }}
+
 <!-- TODO:this should be working from a local file -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="/static/js/charts.js"></script>
 {% endblock %}
 
 {% block body%}
 
-<!-- Page Title -->
 <div class ="container">
+    <!-- Page Title -->
     <div class="page-header">
         <br>
         <h1>Gráficos   <small>Fundação Mata do Bussaco</small></h1>
     </div>
-<!-- search_form -->
-{{ search_form("/charts",lower_date,upper_date,date_warning) }}
-    <div class="row">
-        <div id="container1">
+
+    <!-- search_form -->
+    {{ search_form("/charts",lower_date,upper_date,date_warning) }}
+
+    {% if search %}
+    <!-- chart_form -->
+    <div class="col-md-8 col-md-offset-2">
+        <h4 class="text-center">Tipo de gráfico:</h4>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs nav-justified">
+                        <li class="active">
+                            <a href="#maps" role="tab" data-toggle="tab"
+                               class="text-success">
+                                <b>Mapa</b>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#pie" role="tab" data-toggle="tab"
+                               class="text-success">
+                                <b>Circular</b>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#line" role="tab" data-toggle="tab"
+                               class="text-success">
+                                <b>Cartesiano</b>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="maps">
+                            <h4>Visualizar no mapa:</h4>
+                            <div class="form-group col-md-3">
+                                <label>
+                                    <input type="radio" name="optionsRadios"
+                                           id="maps-world" value="option2">
+                                    Mundo
+                                </label>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>
+                                    <input type="radio" name="optionsRadios"
+                                           id="maps-europe" value="option2">
+                                    Europa
+                                </label>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>
+                                    <input type="radio" name="optionsRadios"
+                                           id="maps-portugal" value="option2">
+                                    Portugal
+                                </label>
+                            </div>
+                            <button class="btn btn-success" id="map-btn"
+                                    type="button"
+                                    onclick="generateMap()"
+                                    style="float: right;">
+                                <span class="glyphicon glyphicon-share-alt"
+                                      aria-hidden="true"></span>
+                                Gerar
+                            </button>
+                        </div>
+
+                        <div class="tab-pane" id="pie">
+                            <h4>Sumatórios de entradas:</h4>
+                            <div class="form-group col-md-3">
+                                <label>
+                                    <input type="radio" name="optionsRadios"
+                                           id="pie-gates" value="option2">
+                                    Portas
+                                </label>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>
+                                    <input type="radio" name="optionsRadios"
+                                           id="pie-countries" value="option2">
+                                    Paises
+                                    </label>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label>
+                                    <input type="radio"
+                                           name="optionsRadios"
+                                           id="pie-municipalities"
+                                           value="option2">
+                                    Concelhos
+                                    </label>
+                            </div>
+                            <button class="btn btn-success" id="pie-btn"
+                                    type="button"
+                                    onclick="generatePie()"
+                                    style="float: right;">
+                                <span class="glyphicon glyphicon-share-alt"
+                                      aria-hidden="true"></span>
+                                Gerar
+                            </button>
+                        </div>
+
+                        <div class="tab-pane" id="line">
+                            <button class="btn btn-success" id="line-btn"
+                                    type="button"
+                                    style="float: right;">
+                                <span class="glyphicon glyphicon-share-alt"
+                                      aria-hidden="true"></span>
+                                Gerar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- warnings for the chart form -->
+        <div class="alert alert-danger" id="error-div" role="alert"
+             style="display: none">
+            <span class="glyphicon glyphicon-exclamation-sign"
+                  aria-hidden="true">
+            </span>
+            <b>Erro,</b>
+            <p id="error-message" style="display: inline">
+            </p>
         </div>
     </div>
+
+    <!-- chart renderer -->
     <div class="row">
-        <div id="container2">
+        <div class="col-md-12">
+            <div id="chart-container">
+            </div>
         </div>
     </div>
 </div>
+{% else %}
+
+<!-- default image before search -->
+<br>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <img src="/static/img/logo.png" height="200px"
+                 alt="logo here"></img>
+        </div>
+    </div>
+</div>
+<br>
+{% endif %}
+
 
 <script>
-Highcharts.chart('container1', {
+Highcharts.chart('chart-container', {
 
     title: {
         text: 'Tipos de Veículos'
     },
 
     subtitle: {
-        text: 'INSERT PERIOD HERE'
+        text: 'Periodo: {{ period_str }}'
     },
 
     yAxis: {
@@ -48,7 +193,8 @@ Highcharts.chart('container1', {
     },
 
     xAxis: {
-        categories: ['0','aa','bb']
+        //TODO: place period.designation here
+        categories: ['aa','bb']
     },
 
     legend: {
@@ -59,13 +205,13 @@ Highcharts.chart('container1', {
 
     plotOptions: {
         series: {
-            pointStart: 1
+            pointStart: 0
         }
     },
 
     series: [{
         name: 'Moto',
-        data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+        data: []
     }, {
         name: 'Ligeiro',
         data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
@@ -82,7 +228,6 @@ Highcharts.chart('container1', {
 
 });
 </script>
-
 
 
 {% endblock %}
