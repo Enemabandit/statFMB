@@ -542,12 +542,12 @@ class Period():
                                          key = lambda x: x.date,
                                          reverse = True)
 
-            self.start_date = sorted_report_list[0].date
+            self.end_date = sorted_report_list[0].date
 
             if len(sorted_report_list) == 1:
-                self.end_date = sorted_report_list[0].date
+                self.start_date = sorted_report_list[0].date
             else:
-                self.end_date = sorted_report_list[-1].date
+                self.start_date = sorted_report_list[-1].date
 
             self.set_designation(period_str)
 

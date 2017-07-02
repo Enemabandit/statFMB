@@ -20,10 +20,11 @@
     <div class="row">
         <!-- Overall Stats -->
         <div class="col-md-3">
-            <h4>Resultados de:</h4>
-            <h4><b>{{ lower_date }}</b> a: <b>{{ upper_date }}</b></h4>
-            <br>
             <h4><b>Porta:</b> {{ gate }}</h4>
+            <h4><b>Período:</b> {{ period_str }}</h4>
+            <h4><b>Resultados de:</b></h4>
+            <h4>{{ lower_date }} <b>a</b> {{ upper_date }}</h4>
+            <br>
             <h4><b>Viaturas:</b> {{ sums["vehicles"] }}</h4>
             <h4><b>Passageiros:</b> {{ sums["passengers"] }}</h4>
             <h4><b>Peões:</b> {{ sums["pedestrians"] }}</h4>

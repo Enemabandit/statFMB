@@ -25,9 +25,16 @@
     {{ search_form("/charts",lower_date,upper_date,date_warning) }}
 
     {% if search %}
+    <br>
     <!-- chart_form -->
-    <div class="col-md-8 col-md-offset-2">
-        <h4 class="text-center">Tipo de gráfico:</h4>
+    <div class="col-md-3">
+        <h4><b>Detalhes da Pesquisa</b></h4>
+        <h4><b>Porta:</b> {{ gate }}</h4>
+        <h4><b>Período:</b> {{ period_str }}</h4>
+        <h4><b>Resultados de:</b></h4>
+        <h4>{{ lower_date }} <b>a</b> {{ upper_date }}</h4>
+    </div>
+    <div class="col-md-6">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <div class="row">
@@ -57,7 +64,7 @@
                     <!-- Tab panes -->
                     <div class="tab-content">
                         <div class="tab-pane active" id="maps">
-                            <h4>Visualizar no mapa:</h4>
+                            <h4> Visualizar no mapa: </h4>
                             <div class="form-group col-md-3">
                                 <label>
                                     <input type="radio" name="optionsRadios"
@@ -80,8 +87,8 @@
                                 </label>
                             </div>
                             <button class="btn btn-success" id="map-btn"
+                                    href="#"
                                     type="button"
-                                    onclick="generateMap()"
                                     style="float: right;">
                                 <span class="glyphicon glyphicon-share-alt"
                                       aria-hidden="true"></span>
@@ -115,8 +122,8 @@
                                     </label>
                             </div>
                             <button class="btn btn-success" id="pie-btn"
+                                    href="#"
                                     type="button"
-                                    onclick="generatePie()"
                                     style="float: right;">
                                 <span class="glyphicon glyphicon-share-alt"
                                       aria-hidden="true"></span>
@@ -126,6 +133,7 @@
 
                         <div class="tab-pane" id="line">
                             <button class="btn btn-success" id="line-btn"
+                                    href="#"
                                     type="button"
                                     style="float: right;">
                                 <span class="glyphicon glyphicon-share-alt"
@@ -142,7 +150,7 @@
         <!-- warnings for the chart form -->
         <div class="alert alert-danger" id="error-div" role="alert"
              style="display: none">
-            <span class="glyphicon glyphicon-exclamation-sign"
+             <span class="glyphicon glyphicon-exclamation-sign"
                   aria-hidden="true">
             </span>
             <b>Erro,</b>
@@ -173,6 +181,31 @@
 </div>
 <br>
 {% endif %}
+
+
+<script>
+ $(function(){
+     document.getElementById("map-btn").addEventListener('click',function(){
+         clearError();
+         clearChart();
+         generateMap().renderTo("chart-container");
+     });
+
+     document.getElementById("pie-btn").addEventListener('click',function(){
+         clearError();
+         clearChart();
+         generatePie().renderTo("chart-container");
+     });
+
+     document.getElementById("line-btn").addEventListener('click',function(){
+         clearError();
+         clearChart();
+         generateLine().renderTo("chart-container");
+     });
+ });
+</script>
+
+
 
 
 <script>
