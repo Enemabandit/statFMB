@@ -26,11 +26,11 @@ function generateMap(){
   var chartContainer = document.getElementById("chart-container");
 
   if (document.getElementById("maps-world").checked){
-    chartContainer.innerText = generateTest();
+    return generateTest();
   } else if (document.getElementById("maps-europe").checked){
-    chartContainer.innerHTML = Date();
+    return Date();
   } else if (document.getElementById("maps-portugal").checked){
-    chartContainer.innerHTML = Date();
+    return Date();
   } else {
     showError("noChart");
   }
@@ -40,11 +40,11 @@ function generatePie(){
   var chartContainer = document.getElementById("chart-container");
 
   if (document.getElementById("pie-gates").checked){
-    chartContainer.innerHTML = generatePieGates();
+    return generatePieGates();
   } else if (document.getElementById("pie-countries").checked){
-    chartContainer.innerHTML = Date();
+    return Date();
   } else if (document.getElementById("pie-municipalities").checked){
-    chartContainer.innerHTML = Date();
+    return Date();
   } else {
     showError("noChart");
   }
@@ -52,7 +52,7 @@ function generatePie(){
 
 function generatePieGates(){
       // Build the chart
-    Highcharts.chart('chart-container', {
+    var chart = Highcharts.chart('chart-container', {
         chart: {
             plotBackgroundColor: null,
             plotBorderWidth: null,
@@ -98,10 +98,11 @@ function generatePieGates(){
             }]
         }]
     });
+  return chart;
 }
 
 function generateTest(){
-Highcharts.chart('chart-container', {
+var chart =Highcharts.chart('chart-container', {
 
     title: {
         text: 'Tipos de Veículos'
@@ -150,6 +151,6 @@ Highcharts.chart('chart-container', {
         name: 'Autocarro',
         data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
     }]
-
 });
+  return chart;
 }
