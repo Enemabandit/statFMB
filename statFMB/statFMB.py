@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, redirect, request
+from flask import Flask, render_template, request, redirect, request, json
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
+from json import dumps
 
 
 app=Flask(__name__)
@@ -97,12 +98,14 @@ def charts():
             period_str = request.form['period']
             search = Search(lower_date, upper_date, gate, period_str)
 
+            print(Search_json_encoder().encode(search))
+
             return render_template("charts.html",
                                    lower_date = lower_date,
                                    upper_date = upper_date,
                                    gate = gate,
                                    period_str = period_str,
-                                   search = search,
+                                   search = json.dumps(search.to_dict()),
             )
 
         ###default route(/)

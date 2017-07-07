@@ -1,7 +1,5 @@
 function showError(errorType){
-  //if (errorType === undefined) { break; }
   clearError();
-
   var errorMsg = document.getElementById("error-message");
 
   document.getElementById("error-div").style.display = "block";
@@ -14,8 +12,8 @@ function showError(errorType){
 }
 
 function clearError(){
-  document.getElementById("error-div").style.display = "none";
-  document.getElementById("error-message").innerText = "";
+  $("#error-div").css("display","none");
+  $("error-message").empty();
 }
 
 function clearChart(){
@@ -34,75 +32,115 @@ function generateMap(){
   } else {
     showError("noChart");
   }
+  return showError();
 }
 
-function generatePie(){
+//TODO: fine tune graphs with options!!
+function generatePie(search){
   var chartContainer = document.getElementById("chart-container");
 
   if (document.getElementById("pie-gates").checked){
-    return generatePieGates();
+    title = "Top Portas";
+    subtitle = "Entradas por porta";
+
+    var data_gates = [];
+    for (var key_gate in search.tops.gates){
+      if (search.tops.gates.hasOwnProperty(key_gate)) {
+        gate_data = [key_gate, search.tops.gates[key_gate]];
+        data_gates.push(gate_data);
+      }
+    }
+    return generatePieChart(data_gates,title,subtitle);
+
   } else if (document.getElementById("pie-countries").checked){
-    return Date();
+    title = "Top Concelhos";
+    subtitle = "Entradas por concelho (+100 entradas)";
+
+    var data_countries = [];
+    for (var key_country in search.tops.countries){
+      if (search.tops.countries.hasOwnProperty(key_country)) {
+        if (search.tops.countries[key_country] >= 100){
+          country_data = [key_country,search.tops.countries[key_country]];
+          data_countries.push(country_data);
+        }
+      }
+    }
+    return generatePieChart(data_countries,title,subtitle);
+
   } else if (document.getElementById("pie-municipalities").checked){
-    return Date();
+    title = "Top Paises";
+    subtitle = "Entradas por pais (+100 entradas)";
+
+    var data_municipalities = [];
+    for (var key_municipality in search.tops.municipalities){
+      if (search.tops.municipalities.hasOwnProperty(key_municipality)) {
+        if (search.tops.municipalities[key_municipality] >= 100){
+          municipality_data = [key_municipality,
+                          search.tops.municipalities[key_municipality]];
+          data_municipalities.push(municipality_data);
+        }
+      }
+    }
+    return generatePieChart(data_municipalities,title,subtitle);
+
   } else {
     showError("noChart");
   }
+  return showError();
 }
 
-function generatePieGates(){
-      // Build the chart
-    var chart = Highcharts.chart('chart-container', {
-        chart: {
-            plotBackgroundColor: null,
-            plotBorderWidth: null,
-            plotShadow: false,
-            type: 'pie'
-        },
-        title: {
-            text: 'Browser market shares January, 2015 to May, 2015'
-        },
-        plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: false
-                },
-                showInLegend: true
-            }
-        },
-        series: [{
-            name: 'Brands',
-            colorByPoint: true,
-            data: [{
-                name: 'Microsoft Internet Explorer',
-                y: 56.33
-            }, {
-                name: 'Chrome',
-                y: 24.03,
-                sliced: true,
-                selected: true
-            }, {
-                name: 'Firefox',
-                y: 10.38
-            }, {
-                name: 'Safari',
-                y: 4.77
-            }, {
-                name: 'Opera',
-                y: 0.91
-            }, {
-                name: 'Proprietary or Undetectable',
-                y: 0.2
-            }]
-        }]
-    });
-  return chart;
+
+function generatePieChart(data,chart_title,chart_subtitle){
+
+  var plotOptions = {
+    pie: {
+      allowPointSelect: true,
+      cursor: 'pointer',
+      dataLabels: {
+        enabled: true,
+        format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+      },
+      showInLegend: true
+    }
+  };
+
+  var title = {
+    text: chart_title
+  };
+
+  var subtitle = {
+    text: chart_subtitle
+  };
+
+  var legend = {
+    layout: 'vertical',
+    align: 'right',
+    verticalAlign: 'middle',
+    borderWidth: 0
+  };
+
+  var series =  [
+    {
+      type: 'pie',
+      name: 'entradas',
+      colorByPoint: true,
+      data: data
+    }
+  ];
+
+  var json = {};
+  json.plotOptions = plotOptions;
+  json.title = title;
+  json.subtitle = subtitle;
+  json.legend = legend;
+  json.series = series;
+
+  $("#chart-container").highcharts(json);
+
 }
 
 function generateTest(){
-var chart =Highcharts.chart('chart-container', {
+Highcharts.chart('chart-container', {
 
     title: {
         text: 'Tipos de Veículos'
@@ -152,5 +190,4 @@ var chart =Highcharts.chart('chart-container', {
         data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
     }]
 });
-  return chart;
 }

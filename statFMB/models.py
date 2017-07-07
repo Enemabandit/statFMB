@@ -1,11 +1,13 @@
 from datetime import date
 from collections import OrderedDict, defaultdict, Counter
+from json import JSONEncoder
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from .statFMB import db
 from .modules.utils import is_typo
+
 
 class Report(db.Model):
     __tablename__ = 'reports'
@@ -521,13 +523,25 @@ class Search():
                     top_municipalities[entrance.municipality.municipality] += (
                         entrance.passengers)
 
-        return {"gates": top_gates.most_common(3),
-                "countries": top_countries.most_common(5),
-                "municipalities": top_municipalities.most_common(5)}
-
+        return {"gates": dict(top_gates.most_common()),
+                "countries": dict(top_countries.most_common()),
+                "municipalities": dict(top_municipalities.most_common())}
 
     def get_totals(self):
         return Period(self.report_list)
+
+    def to_dict(self):
+        tops = self.get_tops()
+        period_list = []
+        for period in self.period_list:
+            period_list.append(period.to_dict())
+
+        return {
+            "period_list": period_list,
+            "tops": tops,
+        }
+
+
 
 class Period():
     vehicles = 0
@@ -614,4 +628,56 @@ class Period():
             elif entrance.vehicle_type.vehicle_type == "Autocarro":
                 self.busses += 1
 
+    def to_dict(self):
+        return {
+            "designation": self.designation,
+            "persons": self.persons,
+            "pawns": self.pawns,
+            "bicicles": self.bicicles,
+            "passengers": self.passengers,
+            "vehicles": self.vehicles,
+            "bikes": self.bikes,
+            "lightduty": self.lightduty,
+            "lightdutyXL": self.lightdutyXL,
+            "caravans": self.caravans,
+            "busses": self.busses,
+        }
 
+'''
+class Period_json_encoder(JSONEncoder):
+    def default(self, period):
+        try:
+            if isinstance(period,Period):
+                return {
+                    "designation": period.designation,
+                    "start_date": period.start_date,
+                    "end_date": period.end_date,
+                    "persons": period.persons,
+                    "pawns": period.pawns,
+                    "bicicles": period.bicicles,
+                    "passengers": period.passengers,
+                    "vehicles": period.vehicles,
+                    "bikes": period.bikes,
+                    "lightduty": period.lightduty,
+                    "lightdutyXL": period.lightdutyXL,
+                    "caravans": period.caravans,
+                    "busses": period.busses,
+                }
+        except TypeError:
+            print("Error encoding period: {} to json".format(period))
+
+class Search_json_encoder(JSONEncoder):
+    def default(self, search):
+        try:
+            if isinstance(search,Search):
+                period_list_json = []
+                for period in search.period_list:
+                    period_list_json.append(
+                        Period_json_encoder().encode(period))
+                return {
+                    "period_list": period_list_json,
+                    "tops": search.get_tops(),
+                }
+        except TypeError:
+            print("Error encoding search: {} to json".format(search))
+'''
