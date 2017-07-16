@@ -1,16 +1,19 @@
 {% macro search_form(action, lower_date,upper_date,date_warning) %}
 <form class="form-inline text-center" method="POST" action={{ action }}>
-    <div class="form-group">
+    <div class="form-group" data-toggle="tooltip"
+         title="Data de inicio da procura">
         <label for="data_inicio">Data de Inicio</label>
         <input type="date" class="form-control" name="lower_date"
                value ={{ lower_date }}>
     </div>
-    <div class="form-group">
+    <div class="form-group" data-toggle="tooltip"
+         title="Data de fim da procura">
         <label for="data_fim">Data de Fim</label>
         <input type="date" class="form-control" name="upper_date"
                value ={{ upper_date }}>
     </div>
-    <div class="form-group">
+    <div class="form-group" data-toggle="tooltip"
+         title="Selecione a porta para pretendida">
         <label for="gate">Porta</label>
         <select class="form-control" name="gate"
                 value={{ gate }}>
@@ -20,7 +23,8 @@
             <option value="Rainha">Rainha</option>
         </select>
     </div>
-    <div class="form-group">
+    <div class="form-group" data-toggle="tooltip"
+         title="Selecione a forma de agrupar a informação">
         <label for="period">Período:</label>
         <select class="form-control" name="period">
             <option value="Totais">Totais</option>

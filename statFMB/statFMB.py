@@ -32,7 +32,7 @@ def index():
                 date_error = True
                 return render_template("statistics.html",
                                        date_warning = True,
-                                       lower_date = date(2001,1,1),
+                                       lower_date = date(2016,1,1),
                                        upper_date = date.today())
 
             gate = request.form['gate']
@@ -62,8 +62,7 @@ def index():
                                        totals = totals,)
 
         ###default route(/)
-        #TODO: set lower_date to inauguration date
-        lower_date = date(2010,1,1)
+        lower_date = date(2016,1,1)
         upper_date = date.today()
 
         #NOTE: to create table uncomment this on first install
@@ -91,31 +90,35 @@ def charts():
                 date_error = True
                 return render_template("statistics.html",
                                        date_warning = True,
-                                       lower_date = date(2001,1,1),
+                                       lower_date = date(2016,1,1),
                                        upper_date = date.today())
 
             gate = request.form['gate']
             period_str = request.form['period']
             search = Search(lower_date, upper_date, gate, period_str)
 
-            print(Search_json_encoder().encode(search))
+            for period in search.period_list:
+                print (period.persons)
 
             return render_template("charts.html",
                                    lower_date = lower_date,
                                    upper_date = upper_date,
                                    gate = gate,
                                    period_str = period_str,
+                                   search_made = True,
                                    search = json.dumps(search.to_dict()),
             )
 
         ###default route(/)
-        #TODO: set lower_date to inauguration date
-        lower_date = date(2010,1,1)
+        lower_date = date(2016,1,1)
         upper_date = date.today()
+        search = {}
 
         return render_template("charts.html",
                                lower_date = lower_date,
                                upper_date = upper_date,
+                               search_made = False,
+                               search = json.dumps(search),
         )
     except Exception as e:
         return(str(e))
@@ -152,6 +155,10 @@ def upload():
 
 
 #TODO: create a way to save failed entrances and forget button
+
+#TODO: !!IMPORTANT!!! alias are being created twice for diferent countries (when prompted for correction in the same page twice), this causes bug on finalizing upload! !*!*!*!*!*!*!*!
+#NOTE: I think this is corrected, need to redo DB to test it
+
 @app.route('/upload/finalize',methods=['GET','POST'])
 def upload_finalize():
     try:
@@ -198,7 +205,7 @@ def upload_finalize():
                 index_bound += int(ne_list[i])
                 corrections_made[report_id] = entrances_list
             save_corrections(corrections_made)
-        return redirect('/')
+        return redirect('/upload')
 
     except Exception as e:
         return(str(e))

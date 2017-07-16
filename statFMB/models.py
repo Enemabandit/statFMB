@@ -580,10 +580,11 @@ class Period():
         self.vehicles += report.vehicles
         self.pawns += report.pawns
         self.bicicles += report.bicicles
+        self.persons += report.pawns
         for entrance in report.entrances.all():
             if entrance.passengers:
                 self.passengers += entrance.passengers
-                self.persons += self.pawns + self.passengers
+                self.persons += entrance.passengers
             self.entrances.append(entrance)
 
     def set_designation(self,period_str):

@@ -24,64 +24,56 @@ function generateMap(){
   var chartContainer = document.getElementById("chart-container");
 
   if (document.getElementById("maps-world").checked){
-    return generateTest();
+    $("#chart-container").text("Not Implemented yet!");
+    return 0;
   } else if (document.getElementById("maps-europe").checked){
-    return Date();
+    $("#chart-container").text("Not Implemented yet!");
+    return 0;
   } else if (document.getElementById("maps-portugal").checked){
-    return Date();
+    $("#chart-container").text("Not Implemented yet!");
+    return 0;
   } else {
     showError("noChart");
   }
   return showError();
+}
+
+function get_pie_data(data_set, minimum_value){
+  minimum_value = (typeof minimum_value !== 'undefined')? minimum_value : 100;
+  var result = [];
+  for(var key in data_set){
+    if (data_set.hasOwnProperty(key)){
+      if (data_set[key] >= minimum_value){
+        result.push([key, data_set[key]]);
+      }
+    }
+  }
+  return result;
 }
 
 //TODO: fine tune graphs with options!!
 function generatePie(search){
-  var chartContainer = document.getElementById("chart-container");
+  var title;
+  var subtitle;
+  var data;
 
   if (document.getElementById("pie-gates").checked){
     title = "Top Portas";
-    subtitle = "Entradas por porta";
-
-    var data_gates = [];
-    for (var key_gate in search.tops.gates){
-      if (search.tops.gates.hasOwnProperty(key_gate)) {
-        gate_data = [key_gate, search.tops.gates[key_gate]];
-        data_gates.push(gate_data);
-      }
-    }
-    return generatePieChart(data_gates,title,subtitle);
+    subtitle = "Viaturas por porta";
+    data = get_pie_data(search.tops.gates,0);
+    return generatePieChart(data,title,subtitle);
 
   } else if (document.getElementById("pie-countries").checked){
-    title = "Top Concelhos";
-    subtitle = "Entradas por concelho (+100 entradas)";
-
-    var data_countries = [];
-    for (var key_country in search.tops.countries){
-      if (search.tops.countries.hasOwnProperty(key_country)) {
-        if (search.tops.countries[key_country] >= 100){
-          country_data = [key_country,search.tops.countries[key_country]];
-          data_countries.push(country_data);
-        }
-      }
-    }
-    return generatePieChart(data_countries,title,subtitle);
+    title = "Top Países";
+    subtitle = "Passageiros por país (+100 entradas)";
+    data = get_pie_data(search.tops.countries);
+    return generatePieChart(data,title,subtitle);
 
   } else if (document.getElementById("pie-municipalities").checked){
-    title = "Top Paises";
-    subtitle = "Entradas por pais (+100 entradas)";
-
-    var data_municipalities = [];
-    for (var key_municipality in search.tops.municipalities){
-      if (search.tops.municipalities.hasOwnProperty(key_municipality)) {
-        if (search.tops.municipalities[key_municipality] >= 100){
-          municipality_data = [key_municipality,
-                          search.tops.municipalities[key_municipality]];
-          data_municipalities.push(municipality_data);
-        }
-      }
-    }
-    return generatePieChart(data_municipalities,title,subtitle);
+    title = "Top Concelhos";
+    subtitle = "passageiros por concelho (+100 entradas)";
+    data = get_pie_data(search.tops.municipalities);
+    return generatePieChart(data,title,subtitle);
 
   } else {
     showError("noChart");
@@ -89,9 +81,7 @@ function generatePie(search){
   return showError();
 }
 
-
 function generatePieChart(data,chart_title,chart_subtitle){
-
   var plotOptions = {
     pie: {
       allowPointSelect: true,
@@ -114,9 +104,13 @@ function generatePieChart(data,chart_title,chart_subtitle){
 
   var legend = {
     layout: 'vertical',
-    align: 'right',
+    align: 'left',
     verticalAlign: 'middle',
     borderWidth: 0
+  };
+
+  var chart = {
+    marginLeft: 10
   };
 
   var series =  [
@@ -128,66 +122,146 @@ function generatePieChart(data,chart_title,chart_subtitle){
     }
   ];
 
-  var json = {};
-  json.plotOptions = plotOptions;
-  json.title = title;
-  json.subtitle = subtitle;
-  json.legend = legend;
-  json.series = series;
+  var options = {};
+  options.plotOptions = plotOptions;
+  options.title = title;
+  options.chart = chart;
+  options.subtitle = subtitle;
+  options.legend = legend;
+  options.series = series;
 
-  $("#chart-container").highcharts(json);
-
+  $("#chart-container").highcharts(options);
 }
 
-function generateTest(){
-Highcharts.chart('chart-container', {
+function get_line_data(period_list,period_key){
+  var result = [];
+  period_list.forEach(function (period){
+    result.push(period[period_key]);
+  });
+  return result;
+}
 
-    title: {
-        text: 'Tipos de Veículos'
-    },
+function get_categories(period_list){
+  var category_list = [];
+  var period_key = "designation";
+  period_list.forEach(function (period){
+    category_list.push(period[period_key]);
+  });
+  return category_list;
+}
 
-    subtitle: {
-        text: 'Periodo: aaa'
-    },
+function get_series(name,data){
+  return {
+    name: name,
+    data: data
+  };
+}
 
-    yAxis: {
-        title: {
-            text: 'Numero de entradas'
-        }
-    },
+function generateLine(search){
+  var period_list = search.period_list;
+  var series = [];
+  var categories = get_categories(period_list);
+  var period_key;
+  var series_name;
 
-    xAxis: {
-        //TODO: place period.designation here
-        categories: ['aa','bb']
-    },
 
-    legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'middle'
-    },
+  if ($("#vehicles-chk").prop('checked')) {
+    period_key = "vehicles";
+    series_name = "Viaturas";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#bikes-chk").prop('checked')) {
+    period_key = "bikes";
+    series_name = "Motos";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#lightduty-chk").prop('checked')) {
+    period_key = "lightduty";
+    series_name = "Ligeiros";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#lightdutyXL-chk").prop('checked')) {
+    period_key = "lightdutyXL";
+    series_name = "LigeirosXL";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#caravans-chk").prop('checked')) {
+    period_key = "caravans";
+    series_name = "Caravanas";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#busses-chk").prop('checked')) {
+    period_key = "busses";
+    series_name = "Autocarros";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#persons-chk").prop('checked')) {
+    period_key = "persons";
+    series_name = "Pessoas";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#pedestrians-chk").prop('checked')) {
+    period_key = "pawns";
+    series_name = "Peões";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
+  if ($("#bicicles-chk").prop('checked')) {
+    period_key = "bicicles";
+    series_name = "Bicicletas";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
 
-    plotOptions: {
-        series: {
-            pointStart: 0
-        }
-    },
+  }
+  if ($("#passengers-chk").prop('checked')) {
+    period_key = "passengers";
+    series_name = "Passageiros";
+    series.push(get_series(series_name,get_line_data(period_list,period_key)));
+  }
 
-    series: [{
-        name: 'Moto',
-        data: []
-    }, {
-        name: 'Ligeiro',
-        data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
-    }, {
-        name: 'Ligeiro XL',
-        data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
-    }, {
-        name: 'Caravana',
-        data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
-    }, {
-        name: 'Autocarro',
-        data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
-    }]
-});
+  generateLineChart(series,categories);
+}
+
+function generateLineChart(chart_series,chart_categories){
+  var title = {
+    text: "Entradas ao longo do tempo"
+   };
+   var subtitle = {
+     text: "Análise de entradas num determidado período de tempo"
+   };
+   var xAxis = {
+     categories: chart_categories,
+     reversed: true
+   };
+   var yAxis = {
+     title: {
+       text: 'numero de entradas'
+     },
+     plotLines: [{
+       value: 0,
+       width: 1,
+       color: '#808080'
+     }]
+   };
+
+   var tooltip = {
+   };
+
+   var legend = {
+     layout: 'vertical',
+     align: 'right',
+     verticalAlign: 'middle',
+     borderWidth: 0
+   };
+
+   var series =  chart_series;
+
+   var options = {};
+   options.title = title;
+   options.subtitle = subtitle;
+   options.xAxis = xAxis;
+   options.yAxis = yAxis;
+   options.tooltip = tooltip;
+   options.legend = legend;
+   options.series = series;
+
+   $('#chart-container').highcharts(options);
 }

@@ -52,18 +52,20 @@
                           <input type="hidden" name="m_failed"
                                  value="{{ invalid_entry[3] }}" />
 
-                          <div class="form-group">
-                              <label  class="col-md-2 control-label" for="vt">
+                          <div class="form-inline">
+                          <div class="form-group col-md-4">
+                              <label  class="control-label col-md-6" for="vt">
                                   <h5>Viatura lida:
                                       <b>{{ invalid_entry[0] }}</b>
                                   </h5>
                               </label>
 
-                              <div class="col-md-2">
+                              <div class="container col-md-6">
                                   {% for vt in vt_list
                                   if vt == invalid_entry[0] %}
 
                                   <select class="form-control" id="vt"
+                                              style="width: 150px"
                                           name="vt"
                                           disabled>
                                       <option selected="selected"
@@ -78,6 +80,7 @@
 
                                   <select class="form-control" id="vt"
                                           name="vt"
+                                          style="width: 150px"
                                           required>
                                       <option disabled selected value>
                                           CORRIGIR
@@ -89,26 +92,26 @@
                                       {% endfor%}
                                   </select>
                                   {% endfor %}
-                              </div>
                               <input type="hidden" name="vt_error"
                                      value = "{{ invalid_entry[0] }}" />
 
+                              <input type="hidden" name="p"
+                                 value="{{ invalid_entry[1] }}" />
+                              </div>
                           </div>
 
-                          <input type="hidden" name="p"
-                                 value="{{ invalid_entry[1] }}" />
-
-                          <div class="form-group">
-                              <label  class="col-md-2 control-label" for="c">
+                          <div class="form-group col-md-4">
+                              <label  class="control-label col-md-6" for="c">
                                   <h5>País lido:
                                       <b>{{ invalid_entry[2] }}</b>
                                   </h5>
                               </label>
-                              <div class="col-md-2">
+                              <div class="container col-md-6">
                                   {% for c in c_list
                                   if c == invalid_entry[2]
                                   and invalid_entry[2] != "N/A" %}
                                   <select class="form-control" id="c" name="c"
+                                              style="width: 150px"
                                           disabled>
                                       <option selected="selected"
                                               value="{{ c }}">
@@ -121,12 +124,14 @@
 
                                       {% if invalid_entry[2] != "N/A" %}
                                   <select class="form-control" id="c" name="c"
+                                          style="width: 150px"
                                           required>
                                       <option disabled selected value>
                                           CORRIGIR
                                       </option>
                                       {% else %}
                                       <select class="form-control" id="c"
+                                              style="width: 150px"
                                               name="c">
                                           <option selected ="selected"
                                                   value="N/A">
@@ -145,17 +150,18 @@
                           </div>
 
 
-                          <div class="form-group">
-                              <label  class="col-md-2 control-label" for="m">
+                          <div class="form-group col-md-4">
+                              <label  class="control-label col-md-6" for="m">
                                   <h5>Concelho lido:
                                       <b>{{ invalid_entry[3] }}</b>
                                   </h5>
                               </label>
-                              <div class="col-md-2">
+                              <div class="container col-md-6">
                                   {% for m in m_list
                                   if m == invalid_entry[3]
                                   and invalid_entry[3] != "N/A" %}
                                   <select class="form-control" id="m" name="m"
+                                          style="width: 150px"
                                           disabled>
                                       <option selected="selected"
                                               value="{{ m }}">
@@ -168,12 +174,16 @@
 
                                       {% if invalid_entry[3] != "N/A" %}
                                   <select class="form-control" id="m" name="m"
+                                          style="width: 150px"
                                           required>
                                       <option disabled selected value>
                                           CORRIGIR
                                       </option>
                                       {% else %}
-                                  <select class="form-control" id="m" name="m">
+                                      <select class="form-control" id="m"
+                                              name="m"
+                                              style="width: 150px"
+                                      >
                                       <option selected="selected"
                                               value ="N/A">
                                           N/A
@@ -188,6 +198,7 @@
                                   </select>
                                   {% endfor %}
                               </div>
+                          </div>
                           </div>
 
                       </div>
@@ -256,5 +267,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/jquery-3.2.1.min.js"></script>
   </body>
 </html>

@@ -77,10 +77,10 @@ def upload_file(new_file):
         print(err)
         return "error",[],[],"Hora inválida"
 
-    ##total_vehicles
+    ##vehicles
     try:
-        total_vehicles = get_total_vehicles(regSheet)
-        print ("==> Vehicles: " + str(total_vehicles))
+        vehicles = get_vehicles(regSheet)
+        print ("==> Vehicles: " + str(vehicles))
     except Exception as err:
         print (err)
         return "error",[],[],"Numero de veículos inválido"
@@ -102,7 +102,7 @@ def upload_file(new_file):
         return "error",[],[],"Numero de bicicletas inválido"
 
     report = Report(date = date,
-                    vehicles = total_vehicles,
+                    vehicles = vehicles,
                     pawns = pawns,
                     bicicles = bicicles,
                     gate = gate,
@@ -115,6 +115,10 @@ def upload_file(new_file):
     entrance_obj_list, error_list = get_entrance_list(statSheet,report)
     print ("==> Entrances registered: {}".format(len(entrance_obj_list)))
     print ("==> Errors found: {}".format(len(error_list)))
+
+    #prevent the case when the user forgets to register the "Folha de Registo"
+    if (vehicles < len(entrance_obj_list)):
+        report.vehicles = len(entrance_obj_list)
 
     #passengers
     passengers = 0
@@ -172,21 +176,26 @@ def save_corrections(saved_corrections):
                                     municipality = municipality_obj)
             db.session.add(entrance_obj)
 
+            #update vehicle type alias table
             if (vehicle_type_obj.vehicle_type != entry["vehicle_type_failed"]):
                 if (entry["vehicle_type_failed"] not in vt_alias_list):
                     vehicle_type_alias_obj = Vehicle_type_alias(
                         alias = entry["vehicle_type_failed"],
                         vehicle_type = vehicle_type_obj)
+                    vt_alias_list.append(vehicle_type_alias_obj)
                     db.session.add(vehicle_type_alias_obj)
 
+            #update country alias table
             if (entry["country_failed"] != "N/A"
                 and country_obj.country != entry["country_failed"]):
                 if (entry["country_failed"] not in c_alias_list):
                     country_alias_obj = Country_alias(
                         alias = entry["country_failed"],
                         country = country_obj)
+                    c_alias_list.append(country_alias_obj)
                     db.session.add(country_alias_obj)
 
+            #update municipality alias table
             if (entry["municipality_failed"] != "N/A"
                 and municipality_obj.municipality
                 != entry["municipality_failed"]):
@@ -194,6 +203,7 @@ def save_corrections(saved_corrections):
                     municipality_alias_obj = Municipality_alias(
                         alias = entry["municipality_failed"],
                         municipality = municipality_obj)
+                    m_alias_list.append(municipality_alias_obj)
                     db.session.add(municipality_alias_obj)
 
     db.session.commit()
@@ -202,7 +212,7 @@ def save_corrections(saved_corrections):
 
 
 #returns a tuple (entrance_obj_list, error_list)
-#TODO: is_alias() in not working for (E.U.América, E A Unidos), needs testing
+#TODO: is_typo() not working properly
 def get_entrance_list(sheet,report):
     #get list of payed entrances
     col_number = 1
@@ -293,7 +303,7 @@ def get_shift(sheet):
     return shift
 
 
-def get_total_vehicles(sheet):
+def get_vehicles(sheet):
     result = 0
     for row in sheet.iter_rows(min_col = 20,
                                max_col = 20,
