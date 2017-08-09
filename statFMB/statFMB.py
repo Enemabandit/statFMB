@@ -97,9 +97,6 @@ def charts():
             period_str = request.form['period']
             search = Search(lower_date, upper_date, gate, period_str)
 
-            for period in search.period_list:
-                print (period.persons)
-
             return render_template("charts.html",
                                    lower_date = lower_date,
                                    upper_date = upper_date,

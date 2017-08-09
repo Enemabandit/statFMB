@@ -81,6 +81,7 @@ function generatePie(search){
   return showError();
 }
 
+//TODO: tooltips of municipalyties pie chart are not correct
 function generatePieChart(data,chart_title,chart_subtitle){
   var plotOptions = {
     pie: {
@@ -163,7 +164,6 @@ function generateLine(search){
   var categories = get_categories(period_list);
   var period_key;
   var series_name;
-
 
   if ($("#vehicles-chk").prop('checked')) {
     period_key = "vehicles";
