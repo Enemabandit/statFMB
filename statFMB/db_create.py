@@ -18,13 +18,13 @@ def create_tables():
     return
 
 #insert
-
 def insert_vehicle_types():
    db.session.add(Vehicle_type("Moto"))
    db.session.add(Vehicle_type("Ligeiro"))
    db.session.add(Vehicle_type("Ligeiro XL"))
    db.session.add(Vehicle_type("Caravana"))
    db.session.add(Vehicle_type("Autocarro"))
+
 
 def insert_countries():
     country_list = []
@@ -48,7 +48,6 @@ def insert_countries():
 
 
 def insert_municipalities_and_alias():
-
     read_list = []
     #read table from file
     with open('statFMB/static/resources/municipality_list.csv', 'rt',

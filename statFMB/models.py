@@ -5,9 +5,27 @@ from json import JSONEncoder
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from .statFMB import db
+from .statFMB import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
 from .modules.utils import is_typo
 
+#Authentication models
+roles_users = db.Table('roles_users',
+        db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+        db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
+
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(100))
+    active = db.Column(db.Boolean())
+    confirmed_at = db.Column(db.DateTime())
+    roles = db.relationship('Role', secondary=roles_users,
+                            backref=db.backref('users', lazy='dynamic'))
 
 class Report(db.Model):
     __tablename__ = 'reports'
@@ -389,6 +407,8 @@ class Municipality_alias(db.Model):
             return False
 
 
+
+
 ###END OF DB.MODELS
 
 class Search():
@@ -542,7 +562,6 @@ class Search():
         }
 
 
-
 class Period():
     vehicles = 0
     pawns = 0
@@ -644,41 +663,3 @@ class Period():
             "busses": self.busses,
         }
 
-'''
-class Period_json_encoder(JSONEncoder):
-    def default(self, period):
-        try:
-            if isinstance(period,Period):
-                return {
-                    "designation": period.designation,
-                    "start_date": period.start_date,
-                    "end_date": period.end_date,
-                    "persons": period.persons,
-                    "pawns": period.pawns,
-                    "bicicles": period.bicicles,
-                    "passengers": period.passengers,
-                    "vehicles": period.vehicles,
-                    "bikes": period.bikes,
-                    "lightduty": period.lightduty,
-                    "lightdutyXL": period.lightdutyXL,
-                    "caravans": period.caravans,
-                    "busses": period.busses,
-                }
-        except TypeError:
-            print("Error encoding period: {} to json".format(period))
-
-class Search_json_encoder(JSONEncoder):
-    def default(self, search):
-        try:
-            if isinstance(search,Search):
-                period_list_json = []
-                for period in search.period_list:
-                    period_list_json.append(
-                        Period_json_encoder().encode(period))
-                return {
-                    "period_list": period_list_json,
-                    "tops": search.get_tops(),
-                }
-        except TypeError:
-            print("Error encoding search: {} to json".format(search))
-'''

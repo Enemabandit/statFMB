@@ -1,28 +1,52 @@
 from flask import Flask, render_template, request, redirect, request, json
 from flask_sqlalchemy import SQLAlchemy
+from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, \
+    RoleMixin, login_required
 from datetime import date
 from json import dumps
 
+#TODO: create a way to save failed entrances and forget button
+#TODO: page to search for one single report
+##TODO: create instance for config (SECURITY)
 
 app=Flask(__name__)
-##TODO: create instance for config (SECURITY)
 ### this was added to solve a deprecation warning
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-#change database name(URL) here
-app.config['SQLALCHEMY_DATABASE_URI']='mysql://statFMB:statFMB@localhost/test1'
+app.config['SQLALCHEMY_DATABASE_URI']='mysql://statFMB:statFMB@localhost/test2'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
+app.config['SECURITY_PASSWORD_SALT']='HMAC'
 
 db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
 from .models import *
-from .charts import *
 from .upload import update_database, save_corrections
 
-###Website structure
+#Setup Flask-Security
+user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+security = Security(app, user_datastore)
+
+# Create a user to test with
+@app.before_first_request
+def create_user():
+    from .db_create import create_tables
+    create_tables()
+    user_datastore.create_user(email='statfmb@fmb.pt', password='1234')
+    db.session.commit()
+
+###############TESTING LOGIN
+@app.route('/login')
+def login():
+    return render_template("login.html")
+
+@app.route('/addUser')
+def addUser():
+    return render_template("addUser.html")
+############################
 
 @app.route('/',methods=['GET','POST'])
+@login_required
 def index():
     try:
         if request.method == 'POST':
@@ -121,7 +145,6 @@ def charts():
         return(str(e))
 
 
-#TODO: page to search for one single report
 @app.route('/reports',methods=['GET','POST'])
 def reports():
     return redirect("/")
@@ -151,7 +174,6 @@ def upload():
         return(str(e))
 
 
-#TODO: create a way to save failed entrances and forget button
 
 #TODO: !!IMPORTANT!!! alias are being created twice for diferent countries (when prompted for correction in the same page twice), this causes bug on finalizing upload! !*!*!*!*!*!*!*!
 #NOTE: I think this is corrected, need to redo DB to test it
@@ -206,6 +228,7 @@ def upload_finalize():
 
     except Exception as e:
         return(str(e))
+
 
 if __name__ == "__main__":
     app.run()
