@@ -1,0 +1,126 @@
+{% extends "layout.html" %}
+
+{% block title %}Carregar Ficheiros{% endblock %}
+
+{% block body%}
+
+<!-- Page Title -->
+<div class ="container">
+    <div class="page-header">
+        <br>
+        <h1>Adicionar utilizador  <small>Fundação Mata do Bussaco</small></h1>
+    </div>
+
+    <!-- success/error message -->
+    {% if warning == "success" %}
+    <div class="alert alert-success alert-dismissible" role="alert">
+        <button type="button" class="close"
+                data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+        <strong>Sucesso!</strong>
+        Utilizador {{ user_added }} adicionado.
+    </div>
+    {% endif %}
+    {% if warning == "error" %}
+    <div class="alert alert-danger alert-dismissible" role="alert">
+        <button type="button" class="close"
+                data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+        <strong>Erro!</strong>
+        Algo correu mal, confira os dados.
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-3">
+        </div>
+        <div class="col-md-6">
+            <form action="/addUser" method="POST">
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <label>Nome</label>
+                        <input type="text" class="form-control" name="name"
+                               placeholder="Nome" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" class="form-control"
+                                       name="email"
+                                       placeholder="Email" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="form-group">
+                                <label>Abreviatura</label>
+                                <input type="text" class="form-control"
+                                       name="alias"
+                                       placeholder="Abreviatura" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label>Password</label>
+                        <input type="password" class="form-control"
+                               name="password"
+                               id="password"
+                               placeholder="Password" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Contacto</label>
+                        <input type="number" class="form-control" name="phone"
+                               placeholder="Contacto" required>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label>Confirmar Password</label>
+                        <input type="password" class="form-control"
+                               name="confirm_password"
+                               id="confirm_password"
+                               placeholder="Confirmar Password"
+                               required>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Tipo de conta</label>
+                        <select class="form-control" name="role" required>
+                            <option value="Portageiro">Portageiro</option>
+                            <option value="Visualizador">Visualizador</option>
+                            <option value="Administrador">
+                                Administrador
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Adicionar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+ var password = document.getElementById("password")
+   , confirm_password = document.getElementById("confirm_password");
+ 
+ function validatePassword(){
+     if(password.value != confirm_password.value) {
+         confirm_password.setCustomValidity("Passwords Don't Match");
+     } else {
+         confirm_password.setCustomValidity('');
+     }
+ }
+ 
+ password.onchange = validatePassword;
+ confirm_password.onkeyup = validatePassword;
+</script>
+{% endblock %}

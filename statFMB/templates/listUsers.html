@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block title %}Listagem de Utilizadores{% endblock %}
+
+{% block body%}
+
+<!-- Page Title -->
+<div class ="container">
+    <div class="page-header">
+        <br>
+        <h1>Listagem de Utilizadores
+            <small>Fundação Mata do Bussaco</small>
+        </h1>
+    </div>
+    <div class="row">
+
+        <form action="/toggleUserActivation" method="POST">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h3 class="panel-title">Nome</h3>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="panel-title">Email</h3>
+                    </div>
+                    <div class="col-md-1">
+                        <h3 class="panel-title">Abreviatura</h3>
+                    </div>
+                    <div class="col-md-1">
+                        <h3 class="panel-title">Contacto</h3>
+                    </div>
+                    <div class="col-md-1">
+                        <h3 class="panel-title">Permissões</h3>
+                    </div>
+                    <div class="col-md-1">
+                        <h3 class="panel-title">Estado</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="panel-title">Ação</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                {% for user in user_list %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <h5>{{ user.name }} </h5>
+                    </div>
+                    <div class="col-md-2">
+                        <h5>{{ user.email }} </h5>
+                    </div>
+                    <div class="col-md-1">
+                        <h5 class="text-center">{{ user.alias }} </h5>
+                    </div>
+                    <div class="col-md-1">
+                        <h5 class="text-center">{{ user.phone }} </h5>
+                    </div>
+                    <div class="col-md-1">
+                        {% for role in user.roles %}
+                        <h5>{{ role.name}}</h5>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-1">
+                        {% if user.active %}
+                        <h5 style="color: #5cb85c" class="text-center">
+                            Ativo
+                        </h5>
+                        {% else %}
+                        <h5 style="color: #d9534f" class="text-center">
+                            Desativo
+                        </h5>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-success" disabled>
+                                Modificar
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-danger"
+                                    type="submit"
+                                    name="toggle" value="{{ user.email }}">
+                            {% if user.active %}
+                                Desativar
+                            {% else %}
+                                Ativar
+                            {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                {% endfor %}
+            </div>
+        </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

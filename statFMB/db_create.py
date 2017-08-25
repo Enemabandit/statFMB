@@ -1,6 +1,5 @@
 from .statFMB import db
-from .models import (Country, Municipality, Municipality_alias,
-                     Shift, Gate, Vehicle_type, Vehicle_type_alias)
+from .models import *
 import csv
 from collections import defaultdict
 from operator import itemgetter
@@ -13,11 +12,21 @@ def create_tables():
     insert_shifts()
     insert_gates()
     insert_vehicle_types()
+    insert_roles()
 
     db.session.commit()
     return
 
 #insert
+def insert_roles():
+    db.session.add(Role(name="Administrador",
+                        description = "Acesso a todas a funcionalidades"))
+    db.session.add(Role(name="Portageiro",
+                        description = "Acesso unicamente para carregamento \
+                        de ficheiros"))
+    db.session.add(Role(name="Visualizador",
+                        description = "Acesso à analise de dados"))
+
 def insert_vehicle_types():
    db.session.add(Vehicle_type("Moto"))
    db.session.add(Vehicle_type("Ligeiro"))

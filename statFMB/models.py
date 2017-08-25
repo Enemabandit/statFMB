@@ -8,25 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from .statFMB import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
 from .modules.utils import is_typo
 
-#Authentication models
-roles_users = db.Table('roles_users',
-        db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
-        db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
-
-class Role(db.Model, RoleMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
-    description = db.Column(db.String(255))
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    active = db.Column(db.Boolean())
-    confirmed_at = db.Column(db.DateTime())
-    roles = db.relationship('Role', secondary=roles_users,
-                            backref=db.backref('users', lazy='dynamic'))
-
+##Report related models
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
@@ -407,7 +389,41 @@ class Municipality_alias(db.Model):
             return False
 
 
+#Authentication models
+roles_users = db.Table('roles_users',
+        db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+        db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
 
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(80), unique=True)
+    password = db.Column(db.String(80))
+    name = db.Column(db.String(200))
+    phone = db.Column(db.Integer)
+    alias = db.Column(db.String(5))
+    active = db.Column(db.Boolean())
+    roles = db.relationship('Role', secondary=roles_users,
+                            backref=db.backref('users', lazy='dynamic'))
+
+    @classmethod
+    def get_user_list(cls):
+        return cls.query.all()
+
+    def user_info(self):
+        info = {'role': self.roles[0],
+                'email': self.email,
+                'state': self.active,
+                'name': self.name,
+                'phone': self.phone,
+                'alias': self.alias,
+        }
+        return info
 
 ###END OF DB.MODELS
 

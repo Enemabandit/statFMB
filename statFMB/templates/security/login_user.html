@@ -1,0 +1,55 @@
+{% from "security/_macros.html" import render_field_with_errors, render_field %}
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block body %}
+<div class ="container">
+    <div class="row page-header">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <div class="pull-left">
+                <h1 class="text-left">Login </h1>
+            </div>
+            <div class="pull-right">
+                <h1 class="text-right">
+                    <span><img src="/static/img/icon-nav.png"></img></span>
+                    <small>Fundação Mata do Bussaco</small>
+                </h1>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+        </div>
+        <div class="col-md-6">
+            <!-- form from flask-security -->
+            <form action="{{ url_for_security('login') }}" method="POST"
+                  name="login_user_form">
+                {{ login_user_form.hidden_tag() }}
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" class="form-control" id="email"
+                    name="email" placeholder="email" value="">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" id="password"
+                    name="password" placeholder="password" value="">
+                </div>
+                {{ render_field(login_user_form.next) }}
+                <p><input class="btn btn-success" id="submit"
+                          name="submit" type="submit" value="Login">
+                </p>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

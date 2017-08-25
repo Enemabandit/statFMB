@@ -49,3 +49,151 @@
 {% endif %}
 <br>
 {% endmacro %}
+
+{% macro navbar(user_info) %}
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed"
+                    data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">
+                <span><img src="/static/img/icon-nav.png"></img></span>
+                Fundação Mata do Bussaco
+            </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                {% if user_info.role == "Portageiro" %}
+                <li><a href="upload">Carregar Receita</a></li>
+                <li><a href="under_construction">Dísponibilidade</a></li>
+                <li><a href="under_construction">Horário</a></li>
+                {% endif %}
+                {% if user_info.role == "Visualizador" %}
+                <li><a href="stats">Estatísticas</a></li>
+                <li><a href="charts">Gráficos</a></li>
+                {% endif %}
+                {% if user_info.role=="Administrador" %}
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        Estatística
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="stats">Estatísticas</a></li>
+                        <li><a href="charts">Gráficos</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        Receitas
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="upload">Carregar</a></li>
+                        <li><a href="under_construction">Descarregar</a></li>
+                        <li><a href="under_construction">Consultar</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        Pendente
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/under_construction">Receitas</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        Correções
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="upload">Receitas</a></li>
+                        <li><a href="/under_construction">Países</a></li>
+                        <li><a href="/under_construction">Concelhos</a></li>
+                        <li><a href="/under_construction">Horário</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        Funcionários
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="addUser">Adicionar</a></li>
+                        <li><a href="listUsers">Listar/Remover</a></li>
+                        <li><a href="under_construction">
+                            Contabilização de Horas
+                        </a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        Horários
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/under_construction">Consultar</a></li>
+                        <li><a href="/under_construction">Gerar</a></li>
+                        <li><a href="/under_construction">Corrigir</a></li>
+                        <li><a href="/under_construction">Disponibilidades</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        {{ user_info.name }}
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="text-right"
+                               href="/under_construction">Alterar Password</a></li>
+                        <li><a class="text-right"
+                               href="/under_construction">Dados Pessoais</a></li>
+                        <li><a class="text-right"
+                               href="logout">Sair</a></li>
+                    </ul>
+                </li>
+                <li><a href="logout">Sair</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+{% endmacro %}

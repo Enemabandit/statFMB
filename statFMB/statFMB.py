@@ -1,13 +1,22 @@
 from flask import Flask, render_template, request, redirect, request, json
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, \
-    RoleMixin, login_required
+    RoleMixin, login_required, current_user, roles_required, roles_accepted, \
+    logout_user
+from flask_security.utils import encrypt_password
 from datetime import date
 from json import dumps
 
+#TODO: setup SSL
+#TODO: create instance for config (SECURITY)
 #TODO: create a way to save failed entrances and forget button
-#TODO: page to search for one single report
-##TODO: create instance for config (SECURITY)
+#TODO: progress bar when uploading files
+#TODO: some users don't change the hours in the report when working half days,
+#      this needs to be reworked in order to get the needed data.
+#TODO: !!IMPORTANT!!! alias are being created twice for diferent countries
+#      and Municipalities (when prompted for correction in the same page twice),
+#      this causes bug on finalizing upload! !*!*!*!*!*!*!*!
+#TODO: Exceptions are not working properly, NEEDS REVIEW and test with debug off
 
 app=Flask(__name__)
 ### this was added to solve a deprecation warning
@@ -15,39 +24,132 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI']='mysql://statFMB:statFMB@localhost/test2'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
 app.config['DEBUG'] = True
+
+#security config
 app.config['SECURITY_PASSWORD_SALT']='HMAC'
 
 db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
 from .models import *
+from .db_create import create_tables
 from .upload import update_database, save_corrections
 
-#Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 # Create a user to test with
-@app.before_first_request
-def create_user():
-    from .db_create import create_tables
-    create_tables()
-    user_datastore.create_user(email='statfmb@fmb.pt', password='1234')
-    db.session.commit()
+#@app.before_first_request
+#def create_user():
+#    create_tables()
+#    user_datastore.create_user(email='Administrador@fmb.pt',
+#                               password='1234',
+#                               name='Admin Adminus',
+#                               phone= 919191911,
+#                               alias= 'BOS')
+#    user_datastore.add_role_to_user('Administrador@fmb.pt', 'Administrador')
+#    user_datastore.create_user(email='visualizador@fmb.pt',
+#                               password='1234',
+#                               name='Viewer Vizualizus',
+#                               phone= 929292922,
+#                               alias= 'VIZ')
+#    user_datastore.add_role_to_user('visualizador@fmb.pt', 'Visualizador')#
+#
+#    user_datastore.create_user(email='portageiro@fmb.pt',
+#                               password='1234',
+#                               name= 'Porti Portikus',
+#                               phone= 939393933,
+#                               alias= 'POR')
+#    user_datastore.add_role_to_user('portageiro@fmb.pt', 'Portageiro')
+#    db.session.commit()
 
-###############TESTING LOGIN
-@app.route('/login')
-def login():
-    return render_template("login.html")
 
-@app.route('/addUser')
-def addUser():
-    return render_template("addUser.html")
-############################
-
-@app.route('/',methods=['GET','POST'])
+@app.route('/')
 @login_required
 def index():
+    return render_template("layout.html",
+                               user_info = current_user.user_info())
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+
+
+@app.route('/addUser', methods=['GET','POST'])
+@roles_required('Administrador')
+def addUser():
+    try:
+        if request.method == 'POST':
+            name = request.form['name']
+            email = request.form['email']
+            alias = request.form['alias'].upper()
+            password = encrypt_password(request.form['password'])
+            phone = request.form['phone']
+            role = request.form['role']
+
+            print("-> Adding user: {}".format(name))
+            print("-> Email: {}".format(email))
+            print("-> Role: {}".format(role))
+
+            user_datastore.create_user(email = email,
+                                       password = password,
+                                       name = name,
+                                       phone = phone,
+                                       alias= alias,
+            )
+            user_datastore.add_role_to_user(email, role)
+            db.session.commit()
+            print("-> User added with success!")
+            return render_template("addUser.html",
+                                   user_info = current_user.user_info(),
+                                   warning = "success",
+                                   user_added = name,
+
+            )
+
+        return render_template("addUser.html",
+                               user_info = current_user.user_info(),
+        )
+    except Exception as e:
+        print (str(e))
+        return render_template("addUser.html",
+                               user_info = current_user.user_info(),
+                               warning = "error",
+        )
+
+
+@app.route('/listUsers')
+@roles_required('Administrador')
+def listUsers():
+    try:
+        user_list = User.get_user_list()
+        return render_template("listUsers.html",
+                               user_list = user_list,
+                               user_info = current_user.user_info(),
+        )
+    except Exception as e:
+        return (str(e))
+
+
+@app.route('/toggleUserActivation', methods=['GET','POST'])
+@roles_required('Administrador')
+def toggleUserActivation():
+    try:
+        if request.method == 'POST':
+            user = request.form['toggle']
+            print("-> user {} activation toggled.")
+            user_datastore.toggle_active(user_datastore.get_user(user))
+            db.session.commit()
+
+            return redirect('listUsers')
+    except Exception as e:
+        return (str(e))
+
+@app.route('/stats',methods=['GET','POST'])
+@roles_accepted('Administrador','Visualizador')
+def stats():
     try:
         if request.method == 'POST':
             lower_date = request.form['lower_date']
@@ -57,7 +159,9 @@ def index():
                 return render_template("statistics.html",
                                        date_warning = True,
                                        lower_date = date(2016,1,1),
-                                       upper_date = date.today())
+                                       upper_date = date.today(),
+                                       user_info = current_user.user_info(),
+                )
 
             gate = request.form['gate']
             period_str = request.form['period']
@@ -83,28 +187,28 @@ def index():
                                        tops = tops,
                                        sums = sums,
                                        period_list = period_list,
-                                       totals = totals,)
+                                       totals = totals,
+                                       user_info = current_user.user_info(),
+                )
 
         ###default route(/)
         lower_date = date(2016,1,1)
         upper_date = date.today()
 
-        #NOTE: to create table uncomment this on first install
-        #TODO: rework this, rly ugly!!
-        #from .db_create import create_tables
-        #create_tables()
-
         return render_template("statistics.html",
                                date_warning = False,
                                is_search = False,
                                upper_date = upper_date,
-                               lower_date = lower_date)
+                               lower_date = lower_date,
+                               user_info = current_user.user_info(),
+        )
 
     except Exception as e:
         return(str(e))
 
 
 @app.route('/charts',methods=['GET','POST'])
+@roles_accepted('Administrador','Visualizador')
 def charts():
     try:
         if request.method == 'POST':
@@ -115,7 +219,9 @@ def charts():
                 return render_template("statistics.html",
                                        date_warning = True,
                                        lower_date = date(2016,1,1),
-                                       upper_date = date.today())
+                                       upper_date = date.today(),
+                                       user_info = current_user.user_info(),
+                )
 
             gate = request.form['gate']
             period_str = request.form['period']
@@ -128,6 +234,7 @@ def charts():
                                    period_str = period_str,
                                    search_made = True,
                                    search = json.dumps(search.to_dict()),
+                                   user_info = current_user.user_info(),
             )
 
         ###default route(/)
@@ -140,17 +247,14 @@ def charts():
                                upper_date = upper_date,
                                search_made = False,
                                search = json.dumps(search),
+                               user_info = current_user.user_info(),
         )
     except Exception as e:
         return(str(e))
 
 
-@app.route('/reports',methods=['GET','POST'])
-def reports():
-    return redirect("/")
-
-
 @app.route('/upload',methods=['GET','POST'])
+@roles_accepted('Administrador','Portageiro')
 def upload():
     try:
         if request.method == 'POST' and 'file[]' in request.files:
@@ -169,16 +273,15 @@ def upload():
                                    m_list = m_list,
             )
 
-        return render_template("uploadFiles.html")
+        return render_template("uploadFiles.html",
+                               user_info = current_user.user_info(),
+        )
     except Exception as e:
         return(str(e))
 
 
-
-#TODO: !!IMPORTANT!!! alias are being created twice for diferent countries (when prompted for correction in the same page twice), this causes bug on finalizing upload! !*!*!*!*!*!*!*!
-#NOTE: I think this is corrected, need to redo DB to test it
-
 @app.route('/upload/finalize',methods=['GET','POST'])
+@roles_accepted('Administrador','Portageiro')
 def upload_finalize():
     try:
         if request.method == 'POST':
@@ -228,6 +331,12 @@ def upload_finalize():
 
     except Exception as e:
         return(str(e))
+
+
+@app.route('/under_construction')
+def underConstruction():
+    return render_template("underConstruction.html",
+                               user_info = current_user.user_info())
 
 
 if __name__ == "__main__":

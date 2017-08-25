@@ -1,5 +1,7 @@
+{% from "macros.html" import navbar %}
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="position: relative; min-height: 100%;">
     <head>
 {% block head %}
     <meta charset="utf-8">
@@ -20,57 +22,43 @@
     </script>
 
 {% endblock %}
+{% if user_info %}
   </head>
+  {{ navbar(user_info) }}
   <header>
+{% endif %}
 {% block header %}
-  <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-          <div class="navbar-header">
-              <button type="button" class="navbar-toggle collapsed"
-                      data-toggle="collapse" data-target="#navbar"
-                      aria-expanded="false" aria-controls="navbar">
-                  <span class="sr-only">Toggle navigation</span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand" href="/">
-                  <span><img src="/static/img/icon-nav.png"></img></span> Fundação Mata do Bussaco
-              </a>
-          </div>
-          <div id="navbar" class="collapse navbar-collapse">
-              <ul class="nav navbar-nav">
-                  <li><a href="/">Estatísticas</a></li>
-                  <li><a href="charts">Gráficos</a></li>
-                  <li><a href="upload">Carregar</a></li>
-                  <li>
-                      <a href="/static/resources/ORIGINAL.xlsx"
-                         download="Folha_de_Receitas_Original"> Exportar </a>
-                  </li>
-              </ul>
-          </div><!--/.nav-collapse -->
-      </div>
-  </nav>
 {% endblock %}
   </header>
   <body>
 {% block body %}
-
+      <br><br>
+      <br><br>
+      <br><br>
+      <br><br>
+      <br><br>
+      <div class="container">
+          <div class="row">
+              <div class="col-md-12 text-center" >
+                  <img src="/static/img/logo.png" height="200px"
+                       alt="logo here"></img>
+              </div>
+          </div>
+      </div>
 {% endblock %}
-
-  <footer>
-{% block footer %}
-      <hr>
-      <h5 class="text-center">
-          Fundação Mata do Bussaco 
-          | website criado por:
-          <a href="mailto:maia.coelho.dev@gmail.com">
-              maia.coelho.dev@gmail.com
-          </a>
-      </h5>
-
-{% endblock %}
-  </footer>
-
+      <br><br>
+      <footer class="footer"
+              style="position: absolute; bottom: 0; width: 100%;">
+          {% block footer %}
+          <hr>
+          <h5 class="text-center">
+              Fundação Mata do Bussaco
+              | website criado por:
+              <a href="mailto:maia.coelho.dev@gmail.com">
+                  maia.coelho.dev@gmail.com
+              </a>
+          </h5>
+          {% endblock %}
+      </footer>
   </body>
 </html>

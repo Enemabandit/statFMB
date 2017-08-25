@@ -13,7 +13,7 @@
         <h1>Estatística <small>Fundação Mata do Bussaco</small></h1>
     </div>
     <!-- search_form -->
-    {{ search_form("/",lower_date,upper_date,date_warning) }}
+    {{ search_form("/stats",lower_date,upper_date,date_warning) }}
     {% if search_is_valid %}
     <div class="row">
         <!-- Overall Stats -->
@@ -145,10 +145,11 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12 text-center">
-            <img src="/static/img/logo.png" height="200px" alt="logo here"></img>
+            <img src="/static/img/logo.png" height="200px" alt="logo here">
+</img>
         </div>
     </div>
 </div>
-<br>
+</div>
 {% endif %}
 {% endblock %}
