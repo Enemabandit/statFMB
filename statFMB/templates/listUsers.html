@@ -1,20 +1,14 @@
 {% extends "layout.html" %}
 
 {% block title %}Listagem de Utilizadores{% endblock %}
+{% block page_header%}Listagem de Utilizadores{% endblock %}
 
 {% block body%}
 
 <!-- Page Title -->
 <div class ="container">
-    <div class="page-header">
-        <br>
-        <h1>Listagem de Utilizadores
-            <small>Fundação Mata do Bussaco</small>
-        </h1>
-    </div>
     <div class="row">
-
-        <form action="/toggleUserActivation" method="POST">
+        <form action="/listUser" method="POST">
         <div class="panel panel-success">
             <div class="panel-heading">
                 <div class="row">
@@ -25,19 +19,19 @@
                         <h3 class="panel-title">Email</h3>
                     </div>
                     <div class="col-md-1">
-                        <h3 class="panel-title">Abreviatura</h3>
+                        <h3 class="panel-title text-center">Abreviatura</h3>
                     </div>
                     <div class="col-md-1">
-                        <h3 class="panel-title">Contacto</h3>
+                        <h3 class="panel-title text-center">Contacto</h3>
                     </div>
                     <div class="col-md-1">
-                        <h3 class="panel-title">Permissões</h3>
+                        <h3 class="panel-title text-center">Permissões</h3>
                     </div>
                     <div class="col-md-1">
-                        <h3 class="panel-title">Estado</h3>
+                        <h3 class="panel-title text-center">Acesso</h3>
                     </div>
                     <div class="col-md-3">
-                        <h3 class="panel-title">Ação</h3>
+                        <h3 class="panel-title text-center">Ação</h3>
                     </div>
                 </div>
             </div>
@@ -68,19 +62,15 @@
                         </h5>
                         {% else %}
                         <h5 style="color: #d9534f" class="text-center">
-                            Desativo
+                            Desativado
                         </h5>
                         {% endif %}
                     </div>
                     <div class="col-md-3">
-                        <div class="col-md-6">
-                            <button class="btn btn-success" disabled>
-                                Modificar
-                            </button>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <button class="btn btn-danger"
                                     type="submit"
+                                    formaction="/toggleUserActivation"
                                     name="toggle" value="{{ user.email }}">
                             {% if user.active %}
                                 Desativar
@@ -89,7 +79,24 @@
                             {% endif %}
                             </button>
                         </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success"
+                                    type="submit"
+                                    formaction="/editUser"
+                                    name="email_to_edit"
+                                    value="{{ user.email }}">
+                                Editar
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success"
+                            formaction="mailto:{{ user.email }}">
+                                Email
+                            </button>
+                        </div>
                     </div>
+                <input type="hidden" name="editing"
+                       value="False">
                 </div>
                 <br>
                 {% endfor %}

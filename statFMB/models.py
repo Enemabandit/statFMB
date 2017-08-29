@@ -404,9 +404,9 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(80), unique=True)
     password = db.Column(db.String(80))
-    name = db.Column(db.String(200))
+    name = db.Column(db.String(100))
     phone = db.Column(db.Integer)
-    alias = db.Column(db.String(5))
+    alias = db.Column(db.String(3), unique=True)
     active = db.Column(db.Boolean())
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
@@ -415,15 +415,73 @@ class User(db.Model, UserMixin):
     def get_user_list(cls):
         return cls.query.all()
 
-    def user_info(self):
-        info = {'role': self.roles[0],
+    @classmethod
+    def is_available(self,email = "",alias = ""):
+        user_list = User.get_user_list()
+        for user in user_list:
+            if email == user.email or alias == user.alias:
+                return False
+        return True
+
+    @classmethod
+    def get_unavailable_description(self,email = "",alias = ""):
+        user_list = User.get_user_list()
+        description = ""
+        for user in user_list:
+            if user.email == email:
+                description += "email->{}; ".format(email)
+            if user.alias == alias:
+                description += "Abreviatura->{} ".format(alias)
+        return description
+
+    #returns true if email is unchanged or available in db
+    def is_email_eligible_for_editing(self, email):
+        if ((self.email != email and User.is_available(email = email))
+            or self.email == email):
+            return True
+        else:
+            return False
+
+    #returns true if alias is unchanged or available in db
+    def is_alias_eligible_for_editing(self, alias):
+        if ((self.alias != alias and User.is_available(alias = alias))
+            or self.alias == alias):
+            return True
+        else:
+            return False
+
+    def is_eligible_for_editing(self,email = "",alias = ""):
+        if ((self.is_email_eligible_for_editing(email) or email == "")
+            and (self.is_alias_eligible_for_editing(alias) or alias == "")):
+            return True
+        else:
+            return False
+
+    def get_ineligible_description(self,email = "",alias = ""):
+        description = ""
+        if email != "" and not self.is_email_eligible_for_editing(email):
+            description += ("email: {}, ".format(email))
+        if alias != "" and not self.is_alias_eligible_for_editing(alias):
+            description += ("abreviatura: {}, ".format(alias))
+        description += "já existe na base de dados"
+        return description
+
+
+    def to_dict(self):
+        return {'role': self.roles[0],
                 'email': self.email,
                 'state': self.active,
                 'name': self.name,
                 'phone': self.phone,
                 'alias': self.alias,
         }
-        return info
+
+    def get_role(self):
+        return self.roles[0]
+
+    def __repr__(self):
+        return '<User: {}>'.format(self.email)
+
 
 ###END OF DB.MODELS
 

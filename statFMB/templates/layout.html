@@ -1,4 +1,4 @@
-{% from "macros.html" import navbar %}
+{% from "macros.html" import navbar, FMB_logo, alert%}
 
 <!DOCTYPE html>
 <html lang="en" style="position: relative; min-height: 100%;">
@@ -22,30 +22,33 @@
     </script>
 
 {% endblock %}
-{% if user_info %}
   </head>
-  {{ navbar(user_info) }}
+
   <header>
+{% if current_user.role in ["Administrador","Visualizador","Portageiro"] %}
+  {{ navbar(current_user) }}
 {% endif %}
 {% block header %}
+      <div class ="container">
+          <div class="page-header">
+              <br>
+              <h1>{% block page_header %}{% endblock %}
+                  <small>Fundação Mata do Bussaco</small>
+              </h1>
+          </div>
+          {% block alert %}
+          {{ alert(alert_data) }}
+          {% endblock %}
+      </div>
 {% endblock %}
   </header>
   <body>
-{% block body %}
-      <br><br>
-      <br><br>
-      <br><br>
-      <br><br>
-      <br><br>
+      {% block body %}
       <div class="container">
-          <div class="row">
-              <div class="col-md-12 text-center" >
-                  <img src="/static/img/logo.png" height="200px"
-                       alt="logo here"></img>
-              </div>
-          </div>
+          <br> <br><br>
+          {{ FMB_logo() }}
       </div>
-{% endblock %}
+      {% endblock %}
       <br><br>
       <footer class="footer"
               style="position: absolute; bottom: 0; width: 100%;">
@@ -58,7 +61,7 @@
                   maia.coelho.dev@gmail.com
               </a>
           </h5>
-          {% endblock %}
       </footer>
+      {% endblock %}
   </body>
 </html>

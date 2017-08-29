@@ -1,17 +1,13 @@
 {# #}
 {% extends "layout.html" %}
 
-{% from "macros.html" import search_form %}
+{% from "macros.html" import search_form, FMB_logo %}
 
-<!-- Page Title -->
 {% block title %}Estatística{% endblock %}
+{% block page_header%}Estatística{% endblock %}
 
 {% block body%}
 <div class="container">
-    <div class="page-header">
-        <br>
-        <h1>Estatística <small>Fundação Mata do Bussaco</small></h1>
-    </div>
     <!-- search_form -->
     {{ search_form("/stats",lower_date,upper_date,date_warning) }}
     {% if search_is_valid %}
@@ -142,13 +138,7 @@
 
 <!-- default image before search -->
 <br>
-<div class="container">
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <img src="/static/img/logo.png" height="200px" alt="logo here">
-</img>
-        </div>
-    </div>
+{{ FMB_logo() }}
 </div>
 </div>
 {% endif %}

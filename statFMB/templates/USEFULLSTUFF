@@ -1,0 +1,29 @@
+
+                        <label>Tipo de conta</label>
+                        <select class="form-control" name="role"
+                            {% if user.roles[0].name == "Portageiro" %}
+                            <option value="Portageiro" selected>
+                                Portageiro
+                            </option>
+                            {% else %}
+                            <option value="Portageiro">Portageiro</option>
+                            {% endif %}
+
+                            {% if user.roles[0].name == "Visualizador" %}
+                            <option value="Visualizador" selected>
+                                Visualizador
+                            </option>
+                            {% else %}
+                            <option value="Visualizador">Visualizador</option>
+                            {% endif %}
+
+                            {% if user.roles[0].name == "Administrador" %}
+                            <option value="Administrador" selected>
+                                Administrador
+                            </option>
+                            {% else %}
+                            <option value="Administrador">
+                                Administrador
+                            </option>
+                            {%endif%}
+                        </select>

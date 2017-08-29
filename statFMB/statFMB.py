@@ -3,28 +3,29 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin, login_required, current_user, roles_required, roles_accepted, \
     logout_user
-from flask_security.utils import encrypt_password
+from flask_security.utils import encrypt_password, verify_password
 from datetime import date
 from json import dumps
 
 #TODO: setup SSL
 #TODO: create instance for config (SECURITY)
+#TODO: change the way warnings are shown (macro)
 #TODO: create a way to save failed entrances and forget button
 #TODO: progress bar when uploading files
+#TODO: user interaction logs
+#TODO: script to validate alias(personalData) input
 #TODO: some users don't change the hours in the report when working half days,
 #      this needs to be reworked in order to get the needed data.
 #TODO: !!IMPORTANT!!! alias are being created twice for diferent countries
 #      and Municipalities (when prompted for correction in the same page twice),
 #      this causes bug on finalizing upload! !*!*!*!*!*!*!*!
-#TODO: Exceptions are not working properly, NEEDS REVIEW and test with debug off
+#TODO: redo upload() and finalize_upload()
+#TODO: search google to sugest municipalities on finalize_upload()
 
 app=Flask(__name__)
-### this was added to solve a deprecation warning
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI']='mysql://statFMB:statFMB@localhost/test2'
 app.config['SECRET_KEY'] = 'DontTellAnyone'
-app.config['DEBUG'] = True
-
 #security config
 app.config['SECURITY_PASSWORD_SALT']='HMAC'
 
@@ -34,13 +35,14 @@ db = SQLAlchemy(app)
 from .models import *
 from .db_create import create_tables
 from .upload import update_database, save_corrections
+from .utils import Alert
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 # Create a user to test with
-#@app.before_first_request
-#def create_user():
+# @app.before_first_request
+# def create_user():
 #    create_tables()
 #    user_datastore.create_user(email='Administrador@fmb.pt',
 #                               password='1234',
@@ -53,28 +55,137 @@ security = Security(app, user_datastore)
 #                               name='Viewer Vizualizus',
 #                               phone= 929292922,
 #                               alias= 'VIZ')
-#    user_datastore.add_role_to_user('visualizador@fmb.pt', 'Visualizador')#
-#
+#    user_datastore.add_role_to_user('visualizador@fmb.pt', 'Visualizador')##
+
 #    user_datastore.create_user(email='portageiro@fmb.pt',
 #                               password='1234',
 #                               name= 'Porti Portikus',
 #                               phone= 939393933,
 #                               alias= 'POR')
 #    user_datastore.add_role_to_user('portageiro@fmb.pt', 'Portageiro')
-#    db.session.commit()
+#   db.session.commit()
 
+#Create debug user
+#@app.before_first_request
+#def create_debug_user():
+#    user_datastore.create_user(email='debug@fmb.pt',
+#                               password='1234',
+#                               name= 'Debugus Maximus',
+#                               phone= 666666666,
+#                               alias= 'DEB')
+#    user_datastore.add_role_to_user('debug@fmb.pt', 'Administrador')
+#    db.session.commit()
 
 @app.route('/')
 @login_required
 def index():
-    return render_template("layout.html",
-                               user_info = current_user.user_info())
+    return render_template("index.html",
+                           current_user = current_user.to_dict())
 
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+
+
+@app.route('/personalData', methods=['GET','POST'])
+@login_required
+def personalData():
+    try:
+        if request.method == 'POST':
+            name = request.form['name']
+            email = request.form['email']
+            phone = request.form['phone']
+            if current_user.roles[0].name == "Administrador":
+                alias = request.form['alias'].upper()
+            else:
+                alias = current_user.alias
+            print("-> Modifying user: {}".format(current_user.email))
+
+            if self.is_eligible_for_editing(email = email, alias = alias):
+                current_user.email = email
+                current_user.alias = alias
+                current_user.name = name
+                current_user.phone = phone
+                db.session.commit()
+                print("-> User {} modified with success!".format(current_user))
+                alert = Alert(category = "success",
+                              title = "Sucesso",
+                              description = "Utilizador {} Alterado.".format(
+                                  name))
+            else:
+                description = current_user.get_ineligible_description(email,
+                                                                      alias)
+                print("-> Error, {}".format(description))
+                alert = Alert(category = "danger",
+                              title = "Erro",
+                              description = description)
+
+            return render_template("personalData.html",
+                                   current_user = current_user.to_dict(),
+                                   alert_data = alert,
+                                   user = current_user,
+
+            )
+        else:
+            alert = Alert(category = "none")
+
+        return render_template("personalData.html",
+                               current_user = current_user.to_dict(),
+                               user = current_user,
+                               alert_data = alert.to_dict(),
+        )
+    except Exception as e:
+        print (str(e))
+        return render_template("personalData.html",
+                               current_user = current_user.to_dict(),
+                               user = current_user,
+                               alert_data = Alert(),
+        )
+
+
+@app.route('/changePassword', methods=['GET','POST'])
+@login_required
+def changePassword():
+    try:
+        if request.method == 'POST':
+            old_password = request.form['old_password']
+            new_password = encrypt_password(request.form['new_password'])
+
+            if verify_password(old_password,current_user.password):
+                current_user.password = new_password
+                warning = "success"
+                db.session.commit()
+                print("-> Password para {} actualizada.".format(
+                    current_user.email))
+            else:
+                warning = "error"
+
+            return render_template("changePassword.html",
+                                   current_user = current_user.to_dict(),
+                                   warning = warning
+            )
+
+
+        return render_template("changePassword.html",
+                               current_user = current_user.to_dict(),
+                               user = current_user,
+        )
+    except Exception as e:
+        print (str(e))
+        return render_template("personalData.html",
+                               current_user = current_user.to_dict(),
+                               user = current_user,
+                               warning = "error",
+        )
+
+
+@app.route('/under_construction')
+@login_required
+def underConstruction():
+    return render_template("underConstruction.html",
+                               current_user = current_user.to_dict())
 
 
 @app.route('/addUser', methods=['GET','POST'])
@@ -93,30 +204,113 @@ def addUser():
             print("-> Email: {}".format(email))
             print("-> Role: {}".format(role))
 
-            user_datastore.create_user(email = email,
-                                       password = password,
-                                       name = name,
-                                       phone = phone,
-                                       alias= alias,
-            )
-            user_datastore.add_role_to_user(email, role)
-            db.session.commit()
-            print("-> User added with success!")
-            return render_template("addUser.html",
-                                   user_info = current_user.user_info(),
-                                   warning = "success",
-                                   user_added = name,
+            if User.is_available(email,alias):
+                user_datastore.create_user(email = email,
+                                           password = password,
+                                           name = name,
+                                           phone = phone,
+                                           alias= alias,
+                )
+                user_datastore.add_role_to_user(email, role)
+                db.session.commit()
 
-            )
+                print("-> User added with success!")
+                alert = Alert(category = "success",
+                              title = "Sucesso",
+                              description = "Utilizador {} adicionado.".format(name))
+            else:
+                print("-> Error, unavailable data for database")
+                alert = Alert (category = "danger",
+                               title = "Erro",
+                               description = "Utilizador com: {}já existe.".format(
+                                   User.get_unavailable_description(email,alias)))
+
+        else:
+            alert = Alert(category = "none")
 
         return render_template("addUser.html",
-                               user_info = current_user.user_info(),
+                               current_user = current_user.to_dict(),
+                               alert_data = alert.to_dict(),
         )
     except Exception as e:
         print (str(e))
         return render_template("addUser.html",
-                               user_info = current_user.user_info(),
-                               warning = "error",
+                               current_user = current_user.to_dict(),
+                               alert_data = Alert(),
+        )
+
+
+@app.route('/editUser', methods=['GET','POST'])
+@roles_required('Administrador')
+def editUser():
+    try:
+        if request.method == 'POST':
+            editing = request.form["editing"]
+            email_to_edit = request.form["email_to_edit"]
+            user_to_edit = user_datastore.get_user(email_to_edit)
+
+            #this only comes true when the POST request comes from editUser.html
+            #NOTE: this may generate parameter tampering vulnaberabilities,
+            #      should be fine since it requires admin previleges to access
+            #      this function
+            if editing == "True":
+                print("-> Editing user {}.".format(user_to_edit.name))
+                name = request.form["name"]
+                email = request.form["email"]
+                alias = request.form["alias"].upper()
+                phone = request.form["phone"]
+                role = request.form["role"]
+                password = request.form["password"]
+
+                if user_to_edit.is_eligible_for_editing(email = email,
+                                                        alias = alias):
+                    user_to_edit.name = name
+                    user_to_edit.email = email
+                    user_to_edit.alias = alias
+                    user_to_edit.phone = phone
+                    if password != "":
+                        user_to_edit.password = password
+
+                    user_datastore.remove_role_from_user(user_to_edit,
+                                                         user_to_edit.get_role()
+                    )
+                    user_datastore.add_role_to_user(user_to_edit,role)
+                    db.session.commit()
+
+                    print("-> User {} edited.".format(user_to_edit.name))
+                    alert = Alert(category = "success",
+                                  title = "Sucesso",
+                                  description = "Utilizador {} editado.".
+                                  format(name))
+                    return render_template("listUsers.html",
+                                           current_user =current_user.to_dict(),
+                                           alert_data = alert,
+                                           user_list = User.get_user_list(),
+                    )
+                else:
+                    description = user_to_edit.get_ineligible_description(email,
+                                                                          alias)
+                    print("-> Error, {}".format(description))
+                    alert = Alert(category = "danger",
+                                  title = "Erro",
+                                  description = description)
+
+            else:
+                alert = Alert(category = "none")
+            return render_template("editUser.html",
+                                   current_user =current_user.to_dict(),
+                                   user = user_to_edit.to_dict(),
+                                   alert_data = alert,
+            )
+        else:
+            return redirect('/')
+
+    except Exception as e:
+        print (str(e))
+        return render_template("listUsers.html",
+                               current_user = current_user.to_dict(),
+                               user_list = User.get_user_list(),
+                               alert_data = Alert(),
         )
 
 
@@ -127,7 +321,7 @@ def listUsers():
         user_list = User.get_user_list()
         return render_template("listUsers.html",
                                user_list = user_list,
-                               user_info = current_user.user_info(),
+                               current_user = current_user.to_dict(),
         )
     except Exception as e:
         return (str(e))
@@ -139,13 +333,14 @@ def toggleUserActivation():
     try:
         if request.method == 'POST':
             user = request.form['toggle']
-            print("-> user {} activation toggled.")
+            print("-> user {} activation toggled.".format(user))
             user_datastore.toggle_active(user_datastore.get_user(user))
             db.session.commit()
 
             return redirect('listUsers')
     except Exception as e:
         return (str(e))
+
 
 @app.route('/stats',methods=['GET','POST'])
 @roles_accepted('Administrador','Visualizador')
@@ -160,7 +355,7 @@ def stats():
                                        date_warning = True,
                                        lower_date = date(2016,1,1),
                                        upper_date = date.today(),
-                                       user_info = current_user.user_info(),
+                                       current_user = current_user.to_dict(),
                 )
 
             gate = request.form['gate']
@@ -188,7 +383,7 @@ def stats():
                                        sums = sums,
                                        period_list = period_list,
                                        totals = totals,
-                                       user_info = current_user.user_info(),
+                                       current_user = current_user.to_dict(),
                 )
 
         ###default route(/)
@@ -200,7 +395,7 @@ def stats():
                                is_search = False,
                                upper_date = upper_date,
                                lower_date = lower_date,
-                               user_info = current_user.user_info(),
+                               current_user = current_user.to_dict(),
         )
 
     except Exception as e:
@@ -220,7 +415,7 @@ def charts():
                                        date_warning = True,
                                        lower_date = date(2016,1,1),
                                        upper_date = date.today(),
-                                       user_info = current_user.user_info(),
+                                       current_user = current_user.to_dict(),
                 )
 
             gate = request.form['gate']
@@ -234,7 +429,7 @@ def charts():
                                    period_str = period_str,
                                    search_made = True,
                                    search = json.dumps(search.to_dict()),
-                                   user_info = current_user.user_info(),
+                                   current_user = current_user.to_dict(),
             )
 
         ###default route(/)
@@ -247,7 +442,7 @@ def charts():
                                upper_date = upper_date,
                                search_made = False,
                                search = json.dumps(search),
-                               user_info = current_user.user_info(),
+                               current_user = current_user.to_dict(),
         )
     except Exception as e:
         return(str(e))
@@ -274,7 +469,7 @@ def upload():
             )
 
         return render_template("uploadFiles.html",
-                               user_info = current_user.user_info(),
+                               current_user = current_user.to_dict(),
         )
     except Exception as e:
         return(str(e))
@@ -331,12 +526,6 @@ def upload_finalize():
 
     except Exception as e:
         return(str(e))
-
-
-@app.route('/under_construction')
-def underConstruction():
-    return render_template("underConstruction.html",
-                               user_info = current_user.user_info())
 
 
 if __name__ == "__main__":

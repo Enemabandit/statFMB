@@ -1,20 +1,22 @@
 {% extends "layout.html" %}
 
-{% block title %}Adicionar Utilizador{% endblock %}
-{% block page_header%}Adicionar Utilizador{% endblock %}
+{% block title %}Editar Utilizador{% endblock %}
+{% block page_header%}Editar Utilizador: <b>{{ user.name }}</b>{% endblock %}
 
 {% block body%}
-<div class="container">
+<div class ="container">
     <div class="row">
         <div class="col-md-3">
         </div>
         <div class="col-md-6">
-            <form action="/addUser" method="POST">
+            <form action="/editUser" method="POST">
                 <div class="form-group row">
                     <div class="col-md-12">
                         <label>Nome</label>
-                        <input type="text" class="form-control" name="name"
-                               placeholder="Nome" required>
+                        <input type="text" class="form-control"
+                               name="name"
+                               value="{{ user.name }}"
+                               placeholder="Nome" >
                     </div>
                 </div>
                 <div class="form-group row">
@@ -24,7 +26,8 @@
                                 <label>Email</label>
                                 <input type="email" class="form-control"
                                        name="email"
-                                       placeholder="Email" required>
+                                       value="{{ user.email }}"
+                                       placeholder="Email" >
                             </div>
                         </div>
                     </div>
@@ -34,7 +37,8 @@
                                 <label>Abreviatura</label>
                                 <input type="text" class="form-control"
                                        name="alias"
-                                       placeholder="Abreviatura" required>
+                                       value="{{ user.alias }}"
+                                       placeholder="Abreviatura" >
                             </div>
                         </div>
                     </div>
@@ -45,12 +49,13 @@
                         <input type="password" class="form-control"
                                name="password"
                                id="password"
-                               placeholder="Password" required>
+                               placeholder="Password">
                     </div>
                     <div class="col-md-6">
                         <label>Contacto</label>
                         <input type="tel" class="form-control" name="phone"
-                               placeholder="Contacto" required>
+                               value="{{ user.phone }}"
+                               placeholder="Contacto" >
                     </div>
                 </div>
                 <div class="form-group row">
@@ -59,25 +64,59 @@
                         <input type="password" class="form-control"
                                name="confirm_password"
                                id="confirm_password"
-                               placeholder="Confirmar Password"
-                               required>
+                               placeholder="Confirmar Password">
                     </div>
                     <div class="col-md-6">
                         <label>Tipo de conta</label>
-                        <select class="form-control" name="role" required>
+                        <select class="form-control" name="role">
+                            {% if user.role == "Portageiro" %}
+                            <option value="Portageiro" selected>
+                                Portageiro
+                            </option>
+                            {% else %}
                             <option value="Portageiro">Portageiro</option>
+                            {% endif %}
+
+                            {% if user.role == "Visualizador" %}
+                            <option value="Visualizador" selected>
+                                Visualizador
+                            </option>
+                            {% else %}
                             <option value="Visualizador">Visualizador</option>
+                            {% endif %}
+
+                            {% if user.role == "Administrador" %}
+                            <option value="Administrador" selected>
+                                Administrador
+                            </option>
+                            {% else %}
                             <option value="Administrador">
                                 Administrador
                             </option>
+                            {%endif%}
                         </select>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-success">
-                    Adicionar
+                    Guardar Alterações
                 </button>
+                <input type="hidden" name="email_to_edit"
+                       value="{{ user.email }}">
+                <input type="hidden" name="editing"
+                       value="True">
             </form>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <p><b>Ajuda:</b></p>
+                    <p>Altere os campos pretendidos, deixando os campos que não
+                        são para alterar como estão e guarde as alterações no
+                        final</p>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
@@ -85,7 +124,7 @@
 <script>
  var password = document.getElementById("password")
    , confirm_password = document.getElementById("confirm_password");
- 
+
  function validatePassword(){
      if(password.value != confirm_password.value) {
          confirm_password.setCustomValidity("Passwords Don't Match");
@@ -93,7 +132,7 @@
          confirm_password.setCustomValidity('');
      }
  }
- 
+
  password.onchange = validatePassword;
  confirm_password.onkeyup = validatePassword;
 </script>
