@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% from "macros.html" import FMB_logo %}
+
+{% block title %}Relatório de Utilização{% endblock %}
+{% block page_header%}Relatório de Utilização{% endblock %}
+
+{% block body%}
+
+<!-- Page Title -->
+<div class ="container">
+    <div class="row">
+        <form class="form-inline text-center" method="POST" action="/logs">
+            <div class="form-group">
+                <label for="data_inicio">Data de Inicio</label>
+                <input type="date" class="form-control" name="lower_date"
+                       value ={{ lower_date }}>
+            </div>
+            <div class="form-group">
+                <label for="data_fim">Data de Fim</label>
+                <input type="date" class="form-control" name="upper_date"
+                       value ={{ upper_date }}>
+            </div>
+            <div class="form-group">
+                <label for="gate">Utilizador</label>
+                <select class="form-control" name="email"
+                        value={{ gate }}>
+                    <option value="Todos" selected>Todos</option>
+                    {% for user in user_list %}
+                    <option value={{ user.email }}> {{ user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">
+                <span class="glyphicon glyphicon-search"
+                      aria-hidden="true"></span>
+                Pesquisar
+            </button>
+        </form>
+    </div>
+</div>
+<div class=" container">
+    <br>
+    {% if logs_list %}
+        <div class="row">
+            <div class="col-md-12">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="container">
+                            <div class="col-md-2">
+                                <h3 class="panel-title text-right">Hora</h3>
+                            </div>
+                            <div class="col-md-3">
+                                <h3 class="panel-title text-right">
+                                    Utilizador
+                                </h3>
+                            </div>
+                            <div class="col-md-7">
+                                <h3 class="panel-title">Descrição</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="container">
+                            {% for log in logs_list %}
+                            <div class="row">
+                            <div class="col-md-2 text-right">
+                                <h5>{{ log.time }}</h5>
+                            </div>
+                            <div class="col-md-3 text-right">
+                                <h5><b>{{ log.user }}</b></h5>
+                            </div>
+                            <div class="col-md-7">
+                                <h5>{{ log.description }}</h5>
+                            </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <br>
+    {{ FMB_logo() }}
+    {% endif %}
+</div>
+
+{% endblock %}

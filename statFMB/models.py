@@ -1,6 +1,7 @@
 from datetime import date
 from collections import OrderedDict, defaultdict, Counter
 from json import JSONEncoder
+from datetime import datetime
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -32,8 +33,7 @@ class Report(db.Model):
     @classmethod
     def get_report(cls,date,gate):
         report = cls.query.filter(cls.date == date,
-                                 cls.gate == gate,
-                                 ).first()
+                                  cls.gate == gate,).first()
         return report
 
     @classmethod
@@ -389,18 +389,78 @@ class Municipality_alias(db.Model):
             return False
 
 
+#Logging models
+class Log(db.Model):
+    __tablename__ = 'log'
+    id = db.Column(db.Integer(), primary_key=True)
+    time = db.Column(db.DateTime())
+    description = db.Column(db.String(200))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __init__(self, description, user, time = datetime.now()):
+        self.time = time
+        self.description = description
+        self.user_id = user.id
+
+    @classmethod
+    def get_logs_raw(cls,user = None,
+                     lower_time= datetime.min, upper_time = datetime.now()):
+        if user == None:
+            logs_query = cls.query.filter(cls.time >= lower_time,
+                                          cls.time <= upper_time)
+        else:
+            logs_query = cls.query.filter(cls.user_id == user.id,
+                                          cls.time >= lower_time,
+                                          cls.time <= upper_time)
+        return logs_query.all()
+
+    @classmethod
+    def get_logs(cls, user = None,
+                 lower_time = datetime.min, upper_time = datetime.now()):
+        logs_list_raw = cls.get_logs_raw(user = user,
+                                         lower_time = lower_time,
+                                         upper_time = upper_time)
+        logs_list = []
+        for log in logs_list_raw:
+            logs_list.append(log.to_dict())
+
+        if logs_list == []:
+            return None
+        else:
+            logs_list = sorted(logs_list, key = lambda t: t['time'],
+                               reverse = True)
+            return logs_list
+
+
+    def to_dict(self):
+        return {"time": self.time,
+                "description": self.description,
+                "user": User.get_user_by_id(self.user_id).name}
+
+
+    def __repr__(self):
+        user = User.get_user_by_id(self.user_id)
+        return '<Log: {}-{}-{}>'.format(self.time,user,self.description)
+
+
 #Authentication models
 roles_users = db.Table('roles_users',
         db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
         db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
 
 class Role(db.Model, RoleMixin):
+    __tablename__ = 'role'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(80), unique=True)
     description = db.Column(db.String(255))
 
+    @classmethod
+    def get_roles():
+        return cls.query.all()
+
 
 class User(db.Model, UserMixin):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(80), unique=True)
     password = db.Column(db.String(80))
@@ -410,10 +470,16 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean())
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
+    logs = db.relationship('Log',
+                           backref=db.backref("logs"), lazy="dynamic")
 
     @classmethod
     def get_user_list(cls):
         return cls.query.all()
+
+    @classmethod
+    def get_user_by_id(cls, user_id):
+        return cls.query.filter(cls.id == user_id).one()
 
     @classmethod
     def is_available(self,email = "",alias = ""):

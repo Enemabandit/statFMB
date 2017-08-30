@@ -4,11 +4,12 @@ from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin, login_required, current_user, roles_required, roles_accepted, \
     logout_user
 from flask_security.utils import encrypt_password, verify_password
-from datetime import date
+from datetime import date, datetime
 from json import dumps
 
 #TODO: setup SSL
 #TODO: create instance for config (SECURITY)
+#TODO: websockets to log user disconnection
 #TODO: change the way warnings are shown (macro)
 #TODO: create a way to save failed entrances and forget button
 #TODO: progress bar when uploading files
@@ -63,7 +64,7 @@ security = Security(app, user_datastore)
 #                               phone= 939393933,
 #                               alias= 'POR')
 #    user_datastore.add_role_to_user('portageiro@fmb.pt', 'Portageiro')
-#   db.session.commit()
+#    db.session.commit()
 
 #Create debug user
 #@app.before_first_request
@@ -76,17 +77,34 @@ security = Security(app, user_datastore)
 #    user_datastore.add_role_to_user('debug@fmb.pt', 'Administrador')
 #    db.session.commit()
 
+
+
 @app.route('/')
-@login_required
 def index():
-    return render_template("index.html",
-                           current_user = current_user.to_dict())
+    if not current_user.is_authenticated:
+        return redirect("/userLogin")
+    else:
+        return render_template("index.html",
+                               current_user= current_user.to_dict())
 
 
-@app.route('/logout')
+@app.route('/userLogin')
 @login_required
-def logout():
+def userLogin():
+    log = Log(description = "Entrou", user = current_user)
+    db.session.add(log)
+    db.session.commit()
+    return redirect("/")
+
+
+@app.route('/userLogout')
+@login_required
+def userLogout():
+    log = Log(description = "Saiu", user = current_user)
+    db.session.add(log)
+    db.session.commit()
     logout_user()
+    return redirect('/')
 
 
 @app.route('/personalData', methods=['GET','POST'])
@@ -103,17 +121,22 @@ def personalData():
                 alias = current_user.alias
             print("-> Modifying user: {}".format(current_user.email))
 
-            if self.is_eligible_for_editing(email = email, alias = alias):
+            if current_user.is_eligible_for_editing(email = email,
+                                                    alias = alias):
                 current_user.email = email
                 current_user.alias = alias
                 current_user.name = name
                 current_user.phone = phone
-                db.session.commit()
-                print("-> User {} modified with success!".format(current_user))
+
+                description = "Dados pessoais editados"
+                print(description)
                 alert = Alert(category = "success",
                               title = "Sucesso",
-                              description = "Utilizador {} Alterado.".format(
-                                  name))
+                              description = description,
+                )
+                log = Log(description = description, user = current_user)
+                db.session.add(log)
+                db.session.commit()
             else:
                 description = current_user.get_ineligible_description(email,
                                                                       alias)
@@ -155,16 +178,22 @@ def changePassword():
 
             if verify_password(old_password,current_user.password):
                 current_user.password = new_password
-                warning = "success"
+                description = ("Password alterada")
+                print(description)
+                alert = Alert(category = "success",
+                              title = "Sucesso",
+                              description = description)
+                log = Log(description = description, user = current_user)
+                db.session.add(log)
                 db.session.commit()
-                print("-> Password para {} actualizada.".format(
-                    current_user.email))
             else:
-                warning = "error"
+                alert = Alert(category = "danger",
+                              title = "Erro",
+                              description = "Password antiga incorreta.")
 
             return render_template("changePassword.html",
                                    current_user = current_user.to_dict(),
-                                   warning = warning
+                                   alert_data = alert,
             )
 
 
@@ -177,7 +206,7 @@ def changePassword():
         return render_template("personalData.html",
                                current_user = current_user.to_dict(),
                                user = current_user,
-                               warning = "error",
+                               alert_data = Alert(),
         )
 
 
@@ -212,18 +241,23 @@ def addUser():
                                            alias= alias,
                 )
                 user_datastore.add_role_to_user(email, role)
-                db.session.commit()
 
-                print("-> User added with success!")
+                description = "Utilizador {} adicionado".format(email)
+                print(description)
                 alert = Alert(category = "success",
                               title = "Sucesso",
-                              description = "Utilizador {} adicionado.".format(name))
+                              description = description)
+                log = Log(description = description,
+                          user = current_user)
+                db.session.add(log)
+                db.session.commit()
             else:
                 print("-> Error, unavailable data for database")
                 alert = Alert (category = "danger",
                                title = "Erro",
-                               description = "Utilizador com: {}já existe.".format(
-                                   User.get_unavailable_description(email,alias)))
+                               description = "Utilizador com: {}já existe.".
+                               format(User.get_unavailable_description(email,
+                                                                       alias)))
 
         else:
             alert = Alert(category = "none")
@@ -275,13 +309,17 @@ def editUser():
                                                          user_to_edit.get_role()
                     )
                     user_datastore.add_role_to_user(user_to_edit,role)
-                    db.session.commit()
 
-                    print("-> User {} edited.".format(user_to_edit.name))
+                    description = ("Utilizador {} editado".
+                                   format(user_to_edit.email))
+                    print(description)
                     alert = Alert(category = "success",
                                   title = "Sucesso",
-                                  description = "Utilizador {} editado.".
-                                  format(name))
+                                  description = description)
+                    log = Log(description = description,
+                              user = current_user)
+                    db.session.add(log)
+                    db.session.commit()
                     return render_template("listUsers.html",
                                            current_user =current_user.to_dict(),
                                            alert_data = alert,
@@ -332,12 +370,77 @@ def listUsers():
 def toggleUserActivation():
     try:
         if request.method == 'POST':
-            user = request.form['toggle']
-            print("-> user {} activation toggled.".format(user))
-            user_datastore.toggle_active(user_datastore.get_user(user))
+            user_email = request.form['toggle']
+            user = user_datastore.get_user(user_email)
+
+            if user.active:
+                description = "Utilizador {} desativado".format(user.email)
+            else:
+                description = "Utilizador {} ativado".format(user.email)
+            print(description)
+
+            user_datastore.toggle_active(user)
+            log = Log(description = description, user = current_user)
+            db.session.add(log)
             db.session.commit()
 
             return redirect('listUsers')
+    except Exception as e:
+        return (str(e))
+
+
+@app.route('/logs', methods=['GET','POST'])
+@roles_required('Administrador')
+def logs():
+    try:
+        user_list = User.get_user_list()
+        lower_date = date(2016,1,1)
+        upper_date = date.today()
+        logs_list = None
+
+        if request.method == 'POST':
+            lower_date = request.form['lower_date']
+            upper_date = request.form['upper_date']
+            lower_time = datetime.strptime(lower_date,"%Y-%m-%d")
+            upper_time = datetime.strptime((upper_date + "-23-59-59"),
+                                           "%Y-%m-%d-%H-%M-%S")
+            user_email = request.form['email']
+
+            if lower_date > upper_date:
+                lower_date = date(2016,1,1)
+                upper_date = date.today()
+                alert = Alert(category = "error",
+                              title = "Erro",
+                              description = ("Data de inicio tem de"
+                                             + " ser anterior à data de fim")
+                )
+            else:
+                if user_email != "Todos":
+                    user = user_datastore.get_user(user_email)
+                    logs_list = Log.get_logs(user = user,
+                                             lower_time = lower_time,
+                                             upper_time = upper_time)
+                else:
+                    logs_list = Log.get_logs(lower_time = lower_time,
+                                             upper_time = upper_time)
+
+                if logs_list == None:
+                    alert = Alert(category = "warning",
+                                  title = "",
+                                  description = "Nenhum registo encontrado.")
+                else:
+                    alert = Alert(category = "none")
+        else:
+            alert = Alert(category = "none")
+
+        return render_template("logs.html",
+                               user_list = user_list,
+                               lower_date = lower_date,
+                               upper_date = upper_date,
+                               logs_list = logs_list,
+                               current_user = current_user.to_dict(),
+                               alert_data = alert,
+        )
     except Exception as e:
         return (str(e))
 
@@ -349,6 +452,7 @@ def stats():
         if request.method == 'POST':
             lower_date = request.form['lower_date']
             upper_date = request.form['upper_date']
+
             if lower_date > upper_date:
                 date_error = True
                 return render_template("statistics.html",
