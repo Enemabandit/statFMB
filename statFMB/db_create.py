@@ -9,7 +9,6 @@ def create_tables():
     db.create_all()
     insert_countries()
     insert_municipalities_and_alias()
-    insert_shifts()
     insert_gates()
     insert_vehicle_types()
     insert_roles()
@@ -86,10 +85,6 @@ def insert_municipalities_and_alias():
 
     return
 
-
-def insert_shifts():
-   db.session.add(Shift("Completo"))
-   db.session.add(Shift("Meio"))
 
 
 def insert_gates():

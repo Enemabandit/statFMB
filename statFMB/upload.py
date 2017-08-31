@@ -7,8 +7,8 @@ from openpyxl.reader.excel import load_workbook, InvalidFileException
 
 from .statFMB import db, Report
 from .models import *
+from .utils import clear_str, represents_int
 
-#TODO: validation for upload, read sheets, date, gate, shift, report
 #TODO: create a pending entrances, mainly for email script but also
 #      so we don't loose invalid entrances
 
@@ -19,7 +19,7 @@ def update_database(new_files):
     failed_uploads = {}
     for new_file in new_files:
 
-        report, entrance_obj_list, error_list, error_msg = upload_file(new_file)
+        report,entrance_obj_list,error_list,error_msg = upload_file(new_file)
         if report != "error":
             upload_results[new_file.filename] = [report,
                                                  entrance_obj_list,
@@ -50,7 +50,6 @@ def upload_file(new_file):
         print(err)
         return "error",[],[],"Nome das folhas inválido"
 
-
     ##date
     try:
         date = format_date(regSheet['C6'].value)
@@ -68,11 +67,18 @@ def upload_file(new_file):
         print (err)
         return "error",[],[],"Porta inválida"
 
-    ##shift
+    ##hours
     try:
-        shift_str = get_shift(regSheet)
-        print ("==> Shift: " + shift_str)
-        shift = Shift.get_shift(shift_str)
+        start_time_str, end_time_str = get_hours(regSheet)
+        start_time_str = date.strftime("%d-%m-%Y-") + start_time_str
+        end_time_str = date.strftime("%d-%m-%Y-") + end_time_str
+        start_time = datetime.strptime(start_time_str,"%d-%m-%Y-%H-%M")
+        end_time = datetime.strptime(end_time_str,"%d-%m-%Y-%H-%M")
+
+        if start_time >= end_time:
+            raise Exception('start_time >= end_time')
+
+        print ("==> Hours: {} -> {}".format(start_time,end_time))
     except Exception as err:
         print(err)
         return "error",[],[],"Hora inválida"
@@ -102,11 +108,12 @@ def upload_file(new_file):
         return "error",[],[],"Numero de bicicletas inválido"
 
     report = Report(date = date,
+                    start_time = start_time,
+                    end_time = end_time,
                     vehicles = vehicles,
                     pawns = pawns,
                     bicicles = bicicles,
                     gate = gate,
-                    shift = shift
     )
     print("==> Report Created!")
 
@@ -128,18 +135,27 @@ def upload_file(new_file):
     new_file.close()
     print ("All instances Created, updating database!")
 
-    if not Report.is_eligible(date,shift,gate):
-        report_old = Report.get_report(date,gate)
-        entrances_old = Entrance.get_entrances_of_report(report_old)
+    report_db_action = Report.get_db_action(date,gate, start_time,end_time)
+    try:
+        if report_db_action == "replace":
+            report_old = Report.get_report(date,start_time,end_time,gate)
+            entrances_old = Entrance.get_entrances_of_report(report_old)
 
-        print("Report already exists in the database, replacing!")
-        print("==> NOTE: this deletes the TAIL of report for each day and gate")
-        print("==> {} entrances deleted!".format(len(entrances_old)))
-        print("==> Report {} deleted!".format(report_old.id))
+            print("Report already exists in the database, replacing!")
+            print("==> {} entrances deleted!".format(len(entrances_old)))
+            print("==> Report {} deleted!".format(report_old.id))
 
-        for entrance in entrances_old:
-            db.session.delete(entrance)
-        db.session.delete(report_old)
+            for entrance in entrances_old:
+                db.session.delete(entrance)
+                db.session.delete(report_old)
+        elif report_db_action == "invalid":
+            raise Exception(
+                "new report is within the time range of another report")
+    except Exception as err:
+        print (err)
+        return ("error",[],[],
+                "Já existe um registo na base de dados durante \
+                este período ({}->{})".format(start_time, end_time))
 
     db.session.add(report)
     for entrance in entrance_obj_list:
@@ -154,30 +170,29 @@ def upload_file(new_file):
 
 
 def save_corrections(saved_corrections):
-    #append entrances to report
-
-    vt_alias_list = Vehicle_type_alias.get_alias_list()
-    c_alias_list = Country_alias.get_alias_list()
-    m_alias_list = Municipality_alias.get_alias_list()
 
     for report_id in saved_corrections:
         report = Report.get_report_by_id(report_id)
         for entry in saved_corrections[report_id]:
+            vt_alias_list = Vehicle_type_alias.get_alias_list()
+            c_alias_list = Country_alias.get_alias_list()
+            m_alias_list = Municipality_alias.get_alias_list()
+
             vehicle_type_obj = Vehicle_type.get_vehicle_type(
                 entry["vehicle_type"])
             country_obj = Country.get_country(entry["country"])
             municipality_obj = Municipality.get_municipality(
                 entry["municipality"])
 
-            entrance_obj = Entrance(report = report,
-                                    vehicle_type = vehicle_type_obj,
-                                    passengers =int(float(entry["passengers"])),
-                                    country = country_obj,
-                                    municipality = municipality_obj)
+            entrance_obj =Entrance(report = report,
+                                   vehicle_type = vehicle_type_obj,
+                                   passengers=int(float(entry["passengers"])),
+                                   country = country_obj,
+                                   municipality = municipality_obj)
             db.session.add(entrance_obj)
 
             #update vehicle type alias table
-            if (vehicle_type_obj.vehicle_type != entry["vehicle_type_failed"]):
+            if (vehicle_type_obj.vehicle_type!= entry["vehicle_type_failed"]):
                 if (entry["vehicle_type_failed"] not in vt_alias_list):
                     vehicle_type_alias_obj = Vehicle_type_alias(
                         alias = entry["vehicle_type_failed"],
@@ -226,6 +241,10 @@ def get_entrance_list(sheet,report):
     countries_list = Country.get_countries_list()
     municipalities_list = Municipality.get_municipalities_list()
 
+    vt_alias_dict = Vehicle_type_alias.get_dict()
+    c_alias_dict = Country_alias.get_dict()
+    m_alias_dict = Municipality_alias.get_dict()
+
     entrance_obj_list = []
     error_list = []
 
@@ -235,15 +254,22 @@ def get_entrance_list(sheet,report):
                                max_row=interval[1]-1,
                                max_col=19):
         if row[0].value:
-            vehicle_type = Vehicle_type.clean_str(row[0].value.capitalize())
+            ## Vehicle_type validation
+            vehicle_type = clear_str(word = row[0].value.capitalize(),
+                                     list_to_check = vehicle_types_list,
+                                     dict_to_double_check = vt_alias_dict)
+            if vehicle_type == "invalid":
+                vehicle_type = row[0].value.capitalize()
 
-            if row[6].value: passengers = row[6].value
-            else: passengers = 0
+            ##passengers validation
+            if represents_int(row[6].value): passengers = row[6].value
+            else: passengers = 1
 
             ## Municipality validation
             if row[18].value:
-                municipality = Municipality.clean_str(
-                    row[18].value.capitalize())
+                municipality = clear_str(row[18].value.capitalize(),
+                                         list_to_check = municipalities_list,
+                                         dict_to_double_check = m_alias_dict)
                 if municipality == "invalid":
                     municipality = row[18].value.capitalize()
             else:
@@ -255,7 +281,9 @@ def get_entrance_list(sheet,report):
             if municipality != "N/A":
                 country = "Portugal"
             elif row[12].value:
-                country = Country.clean_str(row[12].value.capitalize())
+                country = clear_str(row[12].value.capitalize(),
+                                    list_to_check = countries_list,
+                                    dict_to_double_check = c_alias_dict)
                 if country == "invalid":
                     country = row[12].value
             else:
@@ -270,7 +298,6 @@ def get_entrance_list(sheet,report):
                      and municipality != "N/A"
                      or (municipality == "N/A"
                          and country != "Portugal"))):
-
                 entrance = Entrance(passengers = passengers,
                                     report = report,
                                     vehicle_type = Vehicle_type
@@ -282,7 +309,7 @@ def get_entrance_list(sheet,report):
 
                 entrance_obj_list.append(entrance)
             else:
-                error_list.append([row[0].value.capitalize(),
+                error_list.append([vehicle_type,
                                    passengers,
                                    country,
                                    municipality])
@@ -290,29 +317,29 @@ def get_entrance_list(sheet,report):
     return entrance_obj_list, error_list
 
 
-def get_shift(sheet):
+def get_hours(sheet):
 
-    start = sheet['R5'].value
-    end = sheet['V5'].value
+    start_hour = str(sheet['R5'].value)
+    start_minute = str(sheet['T5'].value)
+    end_hour = str(sheet['V5'].value)
+    end_minute = str(sheet['X5'].value)
 
-    if start and end:
-        shift = "Meio" if end - start < 8 else "Completo"
-    else:
-        shift = "Completo"
+    start_time_str = start_hour + "-" + start_minute
+    end_time_str = end_hour + "-" + end_minute
 
-    return shift
+    return start_time_str, end_time_str
 
 
 def get_vehicles(sheet):
-    result = 0
+    vehicles = 0
     for row in sheet.iter_rows(min_col = 20,
                                max_col = 20,
                                min_row = 11,
                                max_row = 18,):
         for cell in row:
             if cell.value:
-                result += cell.value
-    return result
+                vehicles += cell.value
+    return vehicles
 
 
 def get_pawns(sheet):

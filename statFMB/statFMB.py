@@ -10,18 +10,10 @@ from json import dumps
 #TODO: setup SSL
 #TODO: create instance for config (SECURITY)
 #TODO: websockets to log user disconnection
-#TODO: change the way warnings are shown (macro)
 #TODO: create a way to save failed entrances and forget button
-#TODO: progress bar when uploading files
-#TODO: user interaction logs
-#TODO: script to validate alias(personalData) input
+#TODO: progress bar when uploading files(sockets)
 #TODO: some users don't change the hours in the report when working half days,
 #      this needs to be reworked in order to get the needed data.
-#TODO: !!IMPORTANT!!! alias are being created twice for diferent countries
-#      and Municipalities (when prompted for correction in the same page twice),
-#      this causes bug on finalizing upload! !*!*!*!*!*!*!*!
-#TODO: redo upload() and finalize_upload()
-#TODO: search google to sugest municipalities on finalize_upload()
 
 app=Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -76,7 +68,6 @@ security = Security(app, user_datastore)
 #                               alias= 'DEB')
 #    user_datastore.add_role_to_user('debug@fmb.pt', 'Administrador')
 #    db.session.commit()
-
 
 
 @app.route('/')
@@ -612,7 +603,6 @@ def upload_finalize():
                     municipality = m_list[j + index_bound]
                     municipality_failed = m_failed_list[j + index_bound]
                     passengers = p_list[j+ index_bound]
-                    #TODO: this should be a subclass of Entrance
                     entrance = {"vehicle_type" : vehicle_type,
                                 "vehicle_type_failed" : vehicle_type_failed,
                                 "country" : country,

@@ -1,25 +1,27 @@
-from datetime import date
 from collections import OrderedDict, defaultdict, Counter
 from json import JSONEncoder
-from datetime import datetime
+from datetime import date, datetime
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from .statFMB import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
-from .modules.utils import is_typo
 
 ##Report related models
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date,index = True, nullable=False)
+
+    start_time = db.Column(db.DateTime())
+    end_time = db.Column(db.DateTime())
+
     vehicles = db.Column(db.Integer)
+
     pawns = db.Column(db.Integer)
     bicicles = db.Column(db.Integer)
-    gate_id = db.Column(db.Integer, db.ForeignKey('gates.id'))
-    shift_id = db.Column(db.Integer, db.ForeignKey('shifts.id'))
 
+    gate_id = db.Column(db.Integer, db.ForeignKey('gates.id'))
     entrances = db.relationship("Entrance",
                                backref=db.backref("report"),
                                lazy="dynamic")
@@ -29,11 +31,12 @@ class Report(db.Model):
                                              self.date ,
                                               self.gate.gate)
 
-    #TODO: this overrides the last report, if more than one (rework)
     @classmethod
-    def get_report(cls,date,gate):
+    def get_report(cls,date,start_time,end_time,gate):
         report = cls.query.filter(cls.date == date,
-                                  cls.gate == gate,).first()
+                                  cls.start_time == start_time,
+                                  cls.end_time == end_time,
+                                  cls.gate == gate,).one()
         return report
 
     @classmethod
@@ -51,33 +54,28 @@ class Report(db.Model):
         return report_query.all()
 
     @classmethod
-    def is_eligible(cls,input_date,input_shift,input_gate):
+    def get_db_action(cls,input_date,input_gate,input_start_time,
+                       input_end_time):
 
-        query = cls.query.filter(cls.date == input_date,
-                                 cls.gate == input_gate).all()
+        report_list = cls.query.filter(cls.date == input_date,
+                                       cls.gate == input_gate).all()
+
         #query always gets at least 1, wich is the on we are uploading
-        if len(query) > 1:
-            if len(query) < 3 and input_shift.shift == "Meio":
-                    return True
-            else:
-                return False
+        count = 0
+        if len(report_list) > 1:
+            for report in report_list:
+                if (report.start_time == input_start_time
+                    and report.end_time == input_end_time):
+                    count = count +1
+                    if count > 1:
+                        return "replace"
+                elif (report.start_time >= input_end_time
+                      or report.end_time <= input_start_time):
+                    return "valid"
+                else:
+                    return "invalid"
         else:
-            return True
-
-
-class Shift(db.Model):
-    __tablename__ = "shifts"
-    id = db.Column(db.Integer, primary_key = True)
-    shift = db.Column(db.String(20), nullable=False)
-
-    report = db.relationship("Report", backref="shift", lazy="dynamic")
-
-    def __init__(self, shift):
-        self.shift = shift
-
-    @classmethod
-    def get_shift(cls,s):
-        return cls.query.filter(cls.shift == s).one()
+            return "valid"
 
 
 class Gate(db.Model):
@@ -99,7 +97,6 @@ class Entrance(db.Model):
     __tablename__ = 'entrances'
     id = db.Column(db.Integer, primary_key=True)
     passengers = db.Column(db.Integer)
-
     report_id = db.Column(db.Integer, db.ForeignKey('reports.id'))
     vehicle_type_id = db.Column(db.Integer,
                                 db.ForeignKey('vehicle_types.id'))
@@ -147,30 +144,6 @@ class Vehicle_type(db.Model):
         return vehicle_type_list
 
 
-    #TODO: this is replicated in Country and Municipality (rework)
-    #returns the string cleaned for vehicle_type
-    #  or "invalid" when not found
-    @classmethod
-    def clean_str(cls,word):
-        vehicle_type_obj_list = cls.query.all()
-
-        vehicle_type_list = []
-        for vt in vehicle_type_obj_list:
-            vehicle_type_list.append(vt.vehicle_type)
-
-        if word in [x.lower() for x in vehicle_type_list]:
-            return word
-        else:
-            for vehicle_type in vehicle_type_list:
-                if is_typo(word,vehicle_type.lower()):
-                    return vehicle_type
-                else:
-                    if Vehicle_type_alias.is_alias(word,vehicle_type):
-                        return vehicle_type
-            else:
-                return "invalid"
-
-
 class Vehicle_type_alias(db.Model):
     __tablename__ = "vehicle_type_alias"
     id = db.Column(db.Integer, primary_key=True)
@@ -183,35 +156,27 @@ class Vehicle_type_alias(db.Model):
         self.vehicle_type = vehicle_type
 
     @classmethod
+    def get_all(cls):
+        return cls.query.all()
+
+    @classmethod
     def get_alias_list(cls):
-        alias_obj_list = cls.query.all()
+        alias_obj_list = cls.get_all()
         alias_list = []
         for alias in alias_obj_list:
             alias_list.append(alias.alias)
         return alias_list
 
-    #TODO: this is replicated on all alias classes (rework)
     @classmethod
-    def is_alias(cls, word, vehicle_type):
-        alias_obj_list = cls.query.filter(
-            cls.vehicle_type
-            == Vehicle_type.get_vehicle_type(vehicle_type)).all()
-
-        alias_list = []
+    def get_dict(cls):
+        alias_obj_list = cls.get_all()
+        alias_dict = {}
         for alias in alias_obj_list:
-            alias_list.append(alias.alias.lower())
-
-        if alias_list:
-            if word not in alias_list:
-                for alias in alias_list:
-                    if is_typo(word,alias):
-                        return True
-                else:
-                    return False
+            if alias.vehicle_type.vehicle_type in alias_dict:
+                alias_dict[alias.vehicle_type.vehicle_type].append(alias.alias)
             else:
-                return True
-        else:
-            return False
+                alias_dict[alias.vehicle_type.vehicle_type] = [alias.alias]
+        return alias_dict
 
 
 class Country(db.Model):
@@ -238,28 +203,6 @@ class Country(db.Model):
             country_list.append(country.country)
         return country_list
 
-    #TODO: this is replicated on Municipality and Vehicle_type (rework)
-    #returns the string cleaned for country or "invalid" when not found
-    @classmethod
-    def clean_str(cls,word):
-        country_obj_list = cls.query.all()
-
-        country_list = []
-        for c in country_obj_list:
-            country_list.append(c.country)
-
-        if word == [x.lower() for x in country_list]:
-            return word
-        else:
-            for country in country_list:
-                if is_typo(word,country.lower()):
-                    return country
-                else:
-                    if Country_alias.is_alias(word,country):
-                        return country
-            else:
-                return "invalid"
-
 
 class Country_alias(db.Model):
     __tablename__ = 'country_alias'
@@ -268,34 +211,27 @@ class Country_alias(db.Model):
     country_id = db.Column(db.Integer, db.ForeignKey('countries.id'))
 
     @classmethod
+    def get_all(cls):
+        return cls.query.all()
+
+    @classmethod
     def get_alias_list(cls):
-        alias_obj_list = cls.query.all()
+        alias_obj_list = cls.get_all()
         alias_list = []
         for alias in alias_obj_list:
             alias_list.append(alias.alias)
         return alias_list
 
-    #TODO: this is replicated on all alias classes (rework)
     @classmethod
-    def is_alias(cls, word, country):
-        alias_obj_list = cls.query.filter(
-            cls.country == Country.get_country(country)).all()
-
-        alias_list = []
+    def get_dict(cls):
+        alias_obj_list = cls.get_all()
+        alias_dict = {}
         for alias in alias_obj_list:
-            alias_list.append(alias.alias.lower())
-
-        if alias_list:
-            if word not in alias_list:
-                for alias in alias_list:
-                    if is_typo(word,alias):
-                        return True
-                else:
-                    return False
+            if alias.country.country in alias_dict:
+                alias_dict[alias.country.country].append(alias.alias)
             else:
-                return True
-        else:
-            return False
+                alias_dict[alias.country.country] = [alias.alias]
+        return alias_dict
 
 
 class Municipality(db.Model):
@@ -322,29 +258,6 @@ class Municipality(db.Model):
             municipalities_list.append(municipality.municipality)
         return municipalities_list
 
-    #TODO: this is replicated on Country and Vehicle_type (rework)
-    #returns the string cleaned for municipality
-    #  or "invalid" when not found
-    @classmethod
-    def clean_str(cls,word):
-        municipality_obj_list = cls.query.all()
-
-        municipality_list = []
-        for m in municipality_obj_list:
-            municipality_list.append(m.municipality)
-
-        if word in [x.lower() for x in municipality_list]:
-            return word
-        else:
-            for municipality in municipality_list:
-                if is_typo(word,municipality.lower()):
-                    return municipality
-                else:
-                    if Municipality_alias.is_alias(word,municipality):
-                        return municipality
-            else:
-                return "invalid"
-
 
 class Municipality_alias(db.Model):
     __tablename__ = 'municipality_alias'
@@ -358,35 +271,28 @@ class Municipality_alias(db.Model):
         self.municipality = municipality
 
     @classmethod
+    def get_all(cls):
+        return cls.query.all()
+
+    @classmethod
     def get_alias_list(cls):
-        alias_obj_list = cls.query.all()
+        alias_obj_list = cls.get_all()
         alias_list = []
         for alias in alias_obj_list:
             alias_list.append(alias.alias)
         return alias_list
 
-    #TODO: this is replicated on all alias classes (rework)
     @classmethod
-    def is_alias(cls, word, municipality):
-        alias_obj_list = cls.query.filter(
-            cls.municipality
-            == Municipality.get_municipality(municipality)).all()
-
-        alias_list = []
+    def get_dict(cls):
+        alias_obj_list = cls.get_all()
+        alias_dict = {}
         for alias in alias_obj_list:
-            alias_list.append(alias.alias.lower())
-
-        if alias_list:
-            if word not in alias_list:
-                for alias in alias_list:
-                    if is_typo(word,alias):
-                        return True
-                else:
-                    return False
+            if alias.municipality.municipality in alias_dict:
+                alias_dict[alias.municipality.municipality].append(alias.alias)
             else:
-                return True
-        else:
-            return False
+                alias_dict[alias.municipality.municipality] = [alias.alias]
+        return alias_dict
+
 
 
 #Logging models

@@ -1,23 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Relatório de Carregamento - FMB</title>
 
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-  </head>
-  <body>
+{% extends "layout.html" %}
+
+{% block title %}Relatório de Carregamento{% endblock %}
+{% block page_header%}Relatório de Carregamento{% endblock %}
+
+{% block body%}
       <div class="container">
-          <div class="page-header text-center">
-              <h1>Relatório de carregamento<small></small></h1>
-          </div>
           {% if upload_results %}
-          <h3>Correções necessárias:</h3>
           <div class="row">
               <div class ="panel-group">
-
                   <form method="POST" action="/upload/finalize">
                   {% for result in upload_results %}
                   <div class="panel panel-success">
@@ -102,8 +93,23 @@
 
                           <div class="form-group col-md-4">
                               <label  class="control-label col-md-6" for="c">
-                                  <h5>País lido:
-                                      <b>{{ invalid_entry[2] }}</b>
+                                  <h5
+                                      data-toggle="tooltip"
+                                      data-placement="bottom"
+                                      title="clique aqui para uma pesquisa
+                                                   rápida no google.
+                                                   Atenção!
+                                                   os nomes começados por
+                                                   acento estão no fim da
+                                                   lista."
+                                  >
+                                      <a href="https://www.google.pt/search?q={{ invalid_entry[2] }}"
+                                         target="_blank"
+                                         style="text-decoration: inherit;
+                                               color: inherit;">
+                                          País lido:
+                                          <b>{{ invalid_entry[2] }}</b>
+                                      </a>
                                   </h5>
                               </label>
                               <div class="container col-md-6">
@@ -125,6 +131,11 @@
                                       {% if invalid_entry[2] != "N/A" %}
                                   <select class="form-control" id="c" name="c"
                                           style="width: 150px"
+                                          data-toggle="tooltip"
+                                          data-placement="top"
+                                          title="clique no país lido para
+                                                 uma pesquisa rápida no
+                                                 google"
                                           required>
                                       <option disabled selected value>
                                           CORRIGIR
@@ -152,8 +163,23 @@
 
                           <div class="form-group col-md-4">
                               <label  class="control-label col-md-6" for="m">
-                                  <h5>Concelho lido:
-                                      <b>{{ invalid_entry[3] }}</b>
+                                  <h5
+                                      data-toggle="tooltip"
+                                      data-placement="bottom"
+                                      title="clique aqui para uma pesquisa
+                                                   rapida no google.
+                                                   Atenção!
+                                                   os nomes começados por
+                                                   acento estão no fim da
+                                                   lista."
+                                  >
+                                      <a href="https://www.google.pt/search?q={{ invalid_entry[3] }}"
+                                         target="_blank"
+                                         style="text-decoration: inherit;
+                                               color: inherit;">
+                                          Concelho lido:
+                                          <b>{{ invalid_entry[3] }}</b>
+                                      </a>
                                   </h5>
                               </label>
                               <div class="container col-md-6">
@@ -175,6 +201,11 @@
                                       {% if invalid_entry[3] != "N/A" %}
                                   <select class="form-control" id="m" name="m"
                                           style="width: 150px"
+                                          data-toggle="tooltip"
+                                          data-placement="top"
+                                          title="clique no concelho lido para
+                                                 uma pesquisa rápida no
+                                                 google"
                                           required>
                                       <option disabled selected value>
                                           CORRIGIR
@@ -263,10 +294,4 @@
               </div>
       </div>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="/static/js/bootstrap.min.js"></script>
-    <script src="/static/js/jquery-3.2.1.min.js"></script>
-  </body>
-</html>
+{% endblock %}
