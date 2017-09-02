@@ -6,21 +6,29 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from .statFMB import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
+from .utils import is_within_interval
 
 ##Report related models
+#TODO: make vehicles and all types be read from regSheet and saves in object
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date,index = True, nullable=False)
-
     start_time = db.Column(db.DateTime())
     end_time = db.Column(db.DateTime())
+    validated = db.Column(db.Boolean)
 
     vehicles = db.Column(db.Integer)
+    bikes = db.Column(db.Integer)
+    lightduty = db.Column(db.Integer)
+    lightdutyXL = db.Column(db.Integer)
+    caravans = db.Column(db.Integer)
+    busses = db.Column(db.Integer)
 
     pawns = db.Column(db.Integer)
     bicicles = db.Column(db.Integer)
 
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     gate_id = db.Column(db.Integer, db.ForeignKey('gates.id'))
     entrances = db.relationship("Entrance",
                                backref=db.backref("report"),
@@ -36,7 +44,7 @@ class Report(db.Model):
         report = cls.query.filter(cls.date == date,
                                   cls.start_time == start_time,
                                   cls.end_time == end_time,
-                                  cls.gate == gate,).one()
+                                  cls.gate == gate,).first()
         return report
 
     @classmethod
@@ -44,9 +52,10 @@ class Report(db.Model):
         return cls.query.filter(cls.id == report_id).one()
 
     @classmethod
-    def get_report_list(cls,lower_date, upper_date, gate):
+    def get_report_list(cls,lower_date, upper_date, gate, validated = True):
         report_query = cls.query.filter(cls.date >= lower_date,
-                                       cls.date <= upper_date)
+                                        cls.date <= upper_date,
+                                        cls.validated == validated)
         if gate != "Todas":
             gate_obj = Gate.get_gate(gate)
             report_query = report_query.filter(cls.gate == gate_obj)
@@ -54,28 +63,74 @@ class Report(db.Model):
         return report_query.all()
 
     @classmethod
+    def get_unvalidated_reports(cls):
+        return cls.query.filter(cls.validated == False).all()
+
+    @classmethod
     def get_db_action(cls,input_date,input_gate,input_start_time,
                        input_end_time):
 
         report_list = cls.query.filter(cls.date == input_date,
                                        cls.gate == input_gate).all()
+        #removes the report we are working on from the list
+        report_list.pop()
 
-        #query always gets at least 1, wich is the on we are uploading
-        count = 0
-        if len(report_list) > 1:
+        if report_list == []:
+            return "valid"
+        else:
             for report in report_list:
-                if (report.start_time == input_start_time
-                    and report.end_time == input_end_time):
-                    count = count +1
-                    if count > 1:
-                        return "replace"
-                elif (report.start_time >= input_end_time
-                      or report.end_time <= input_start_time):
+                if(report.start_time == input_start_time
+                   and report.end_time == input_end_time):
+                    return "replace"
+                elif Report.is_time_range_valid(input_start_time,
+                                                input_end_time,
+                                                report_list):
                     return "valid"
                 else:
                     return "invalid"
+
+    @classmethod
+    def is_time_range_valid(cls,start_time,end_time,report_list):
+        free_interval_list = Report.get_free_interval_list(report_list)
+        for interval in free_interval_list:
+            if is_within_interval(start_time,end_time,interval):
+                return True
         else:
-            return "valid"
+            return False
+
+    @classmethod
+    def get_free_interval_list(cls,report_list):
+        free_interval_list = [(datetime.min, datetime.max)]
+        interval_updated = None
+
+        for report in report_list:
+                for interval in free_interval_list:
+                    if is_within_interval(report.start_time,
+                                          report.end_time,
+                                          interval):
+                        interval_outdated = interval
+                        interval_updated = [(interval[0],report.start_time),
+                                            (report.end_time,interval[1])]
+                if interval_updated:
+                    free_interval_list.remove(interval_outdated)
+                    free_interval_list.extend(interval_updated)
+        return free_interval_list
+
+    def to_dict(self):
+        total = ( 5 * self.lightduty +
+                  7 * self.lightdutyXL +
+                  2 * self.bikes +
+                  12 * self.caravans +
+                  30 * self.busses)
+        return {"id": self.id,
+                "date": self.date.strftime("%d/%m/%Y"),
+                "start_time": self.start_time.strftime("%H:%M"),
+                "end_time": self.end_time.strftime("%H:%M"),
+                "user": self.user.name,
+                "email": self.user.email,
+                "gate": self.gate.gate,
+                "total": total,
+                }
 
 
 class Gate(db.Model):
@@ -132,7 +187,8 @@ class Vehicle_type(db.Model):
     #returns the contents of table vehicle_types
     @classmethod
     def get_vehicle_types(cls):
-        return cls.query.all()
+        query = cls.query.all()
+        return query
 
     #returns a list of all Vehicle_type.vehicle_type strings
     @classmethod
@@ -294,7 +350,6 @@ class Municipality_alias(db.Model):
         return alias_dict
 
 
-
 #Logging models
 class Log(db.Model):
     __tablename__ = 'log'
@@ -303,8 +358,8 @@ class Log(db.Model):
     description = db.Column(db.String(200))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, description, user, time = datetime.now()):
-        self.time = time
+    def __init__(self, description, user):
+        self.time = datetime.now()
         self.description = description
         self.user_id = user.id
 
@@ -374,10 +429,12 @@ class User(db.Model, UserMixin):
     phone = db.Column(db.Integer)
     alias = db.Column(db.String(3), unique=True)
     active = db.Column(db.Boolean())
+
+    reports = db.relationship("Report", backref="user", lazy="dynamic")
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
     logs = db.relationship('Log',
-                           backref=db.backref("logs"), lazy="dynamic")
+                           backref="logs", lazy="dynamic")
 
     @classmethod
     def get_user_list(cls):
@@ -440,12 +497,17 @@ class User(db.Model, UserMixin):
 
 
     def to_dict(self):
+        if self.get_role() == "Administrador":
+            pending_reports = len(Report.get_unvalidated_reports())
+        else:
+            pending_reports = 0
         return {'role': self.roles[0],
                 'email': self.email,
                 'state': self.active,
                 'name': self.name,
                 'phone': self.phone,
                 'alias': self.alias,
+                'pending_reports': pending_reports,
         }
 
     def get_role(self):
@@ -610,6 +672,11 @@ class Search():
 
 class Period():
     vehicles = 0
+    bikes = 0
+    lightduty = 0
+    lightdutyXL = 0
+    caravans = 0
+    busses = 0
     pawns = 0
     bicicles = 0
     passengers = 0
@@ -634,7 +701,11 @@ class Period():
             for report in report_list:
                 self + report
 
-            self.set_vehicles()
+            #NOTE: this reads the vehicle tipes data from the entrance list.
+            #      if this needs to be used again __add__() will have to be
+            #      altered acordingly
+            #      this probably can be deleted after beta testing is finished
+            #self.set_vehicles()
 
 
     def __repr__(self):
@@ -643,6 +714,11 @@ class Period():
     #adds a report to the period
     def __add__(self, report):
         self.vehicles += report.vehicles
+        self.bikes += report.bikes
+        self.lightduty += report.lightduty
+        self.lightdutyXL += report.lightdutyXL
+        self.caravans += report.caravans
+        self.busses += report.busses
         self.pawns += report.pawns
         self.bicicles += report.bicicles
         self.persons += report.pawns
@@ -675,24 +751,24 @@ class Period():
         else:
             self.designation = self.__repr__()
 
-    def set_vehicles(self):
-        self.lightduty = 0
-        self.lightdutyXL = 0
-        self.caravans = 0
-        self.busses = 0
-        self.bikes = 0
+    # def set_vehicles(self):
+    #     self.lightduty = 0
+    #     self.lightdutyXL = 0
+    #     self.caravans = 0
+    #     self.busses = 0
+    #     self.bikes = 0
 
-        for entrance in self.entrances:
-            if entrance.vehicle_type.vehicle_type == "Moto":
-                self.bikes += 1
-            elif entrance.vehicle_type.vehicle_type == "Ligeiro":
-                self.lightduty += 1
-            elif entrance.vehicle_type.vehicle_type == "Ligeiro XL":
-                self.lightdutyXL += 1
-            elif entrance.vehicle_type.vehicle_type == "Caravana":
-                self.caravans += 1
-            elif entrance.vehicle_type.vehicle_type == "Autocarro":
-                self.busses += 1
+    #     for entrance in self.entrances:
+    #         if entrance.vehicle_type.vehicle_type == "Moto":
+    #             self.bikes += 1
+    #         elif entrance.vehicle_type.vehicle_type == "Ligeiro":
+    #             self.lightduty += 1
+    #         elif entrance.vehicle_type.vehicle_type == "Ligeiro XL":
+    #             self.lightdutyXL += 1
+    #         elif entrance.vehicle_type.vehicle_type == "Caravana":
+    #             self.caravans += 1
+    #         elif entrance.vehicle_type.vehicle_type == "Autocarro":
+    #             self.busses += 1
 
     def to_dict(self):
         return {

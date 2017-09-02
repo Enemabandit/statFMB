@@ -436,6 +436,103 @@ def logs():
         return (str(e))
 
 
+@app.route('/validateReport', methods=['GET','POST'])
+@roles_required('Administrador')
+def validateReport():
+    try:
+        if request.method == 'POST':
+            report_id = request.form['report_id']
+            report = Report.get_report_by_id(report_id)
+            report.validated = True
+            print("=> Report {} validated".format(report))
+            description = "receita {} validada.".format(report)
+            log = Log(description = "validou receita {}".format(report),
+                      user = current_user)
+            alert = Alert(category = "success",
+                          title = "Sucesso",
+                          description = description)
+            db.session.add(log)
+            db.session.commit()
+        else:
+            alert = Alert("none")
+
+        report_list = Report.get_unvalidated_reports()
+        printable_reports = []
+        for report in report_list:
+            printable_reports.append(report.to_dict())
+
+        return render_template("validateReports.html",
+                               current_user = current_user.to_dict(),
+                               report_list = printable_reports,
+                               alert_data = alert,
+        )
+    except Exception as e:
+        return (str(e))
+
+
+@app.route('/deleteReport', methods=['GET','POST'])
+@roles_required('Administrador')
+def deleteReport():
+    try:
+        if request.method == 'POST':
+            report_id = request.form['report_id']
+            report = Report.get_report_by_id(report_id)
+            entrances = Entrance.get_entrances_of_report(report)
+            for entrance in entrances:
+                db.session.delete(entrance)
+            db.session.delete(report)
+
+            print("=> report {} eliminated.".format(report))
+            description = "receita {} Eliminada.".format(report)
+            log = Log(description = "Eliminou receita {}".format(report),
+                      user = current_user)
+            alert = Alert(category = "success",
+                          title = "Sucesso",
+                          description = description)
+            db.session.add(log)
+            db.session.commit()
+        else:
+            alert = Alert("none")
+
+        report_list = Report.get_unvalidated_reports()
+        printable_reports = []
+        for report in report_list:
+            printable_reports.append(report.to_dict())
+
+        return render_template("validateReports.html",
+                               current_user = current_user.to_dict(),
+                               report_list = printable_reports,
+                               alert_data = alert,
+        )
+    except Exception as e:
+        return (str(e))
+
+
+@app.route('/validateReports', methods=['GET','POST'])
+@roles_required('Administrador')
+def validateReports():
+    try:
+        report_list = Report.get_unvalidated_reports()
+        printable_reports = []
+        for report in report_list:
+            printable_reports.append(report.to_dict())
+
+        if printable_reports == []:
+            alert = Alert(category = "warning",
+                          title = "Atenção",
+                          description = "nenhuma receita pendente")
+        else:
+            alert = Alert(category = "none")
+
+        return render_template("validateReports.html",
+                               current_user = current_user.to_dict(),
+                               report_list = printable_reports,
+                               alert_data = alert,
+        )
+    except Exception as e:
+        return (str(e))
+
+
 @app.route('/stats',methods=['GET','POST'])
 @roles_accepted('Administrador','Visualizador')
 def stats():
@@ -484,7 +581,6 @@ def stats():
         ###default route(/)
         lower_date = date(2016,1,1)
         upper_date = date.today()
-
         return render_template("statistics.html",
                                date_warning = False,
                                is_search = False,
@@ -565,6 +661,7 @@ def upload():
 
         return render_template("uploadFiles.html",
                                current_user = current_user.to_dict(),
+                               user_list = User.get_user_list(),
         )
     except Exception as e:
         return(str(e))

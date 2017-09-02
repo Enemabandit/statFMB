@@ -5,7 +5,7 @@ from openpyxl import load_workbook, worksheet
 from openpyxl.workbook import Workbook
 from openpyxl.reader.excel import load_workbook, InvalidFileException
 
-from .statFMB import db, Report
+from .statFMB import db, Report, current_user
 from .models import *
 from .utils import clear_str, represents_int
 
@@ -86,7 +86,7 @@ def upload_file(new_file):
     ##vehicles
     try:
         vehicles = get_vehicles(regSheet)
-        print ("==> Vehicles: " + str(vehicles))
+        print ("==> Vehicles: " + str(vehicles['total']))
     except Exception as err:
         print (err)
         return "error",[],[],"Numero de veículos inválido"
@@ -107,13 +107,23 @@ def upload_file(new_file):
         print (err)
         return "error",[],[],"Numero de bicicletas inválido"
 
+    #NOTE: vehicles dict cannot be passed as a parameter to the
+    #      Report __init__(), this leaves sqlalchemy in a bad state that
+    #      generates a bug in reading from the db later on
     report = Report(date = date,
                     start_time = start_time,
                     end_time = end_time,
-                    vehicles = vehicles,
+                    validated = False,
+                    vehicles = vehicles["total"],
+                    bikes = vehicles["bikes"],
+                    lightduty = vehicles["lightduty"],
+                    lightdutyXL = vehicles["lightdutyXL"],
+                    caravans = vehicles["caravans"],
+                    busses = vehicles["busses"],
                     pawns = pawns,
                     bicicles = bicicles,
                     gate = gate,
+                    user = current_user,
     )
     print("==> Report Created!")
 
@@ -124,8 +134,8 @@ def upload_file(new_file):
     print ("==> Errors found: {}".format(len(error_list)))
 
     #prevent the case when the user forgets to register the "Folha de Registo"
-    if (vehicles < len(entrance_obj_list)):
-        report.vehicles = len(entrance_obj_list)
+    if (vehicles["total"] < (len(entrance_obj_list) + len(error_list))):
+        return "error",[],[],"Numero de veículos da folha de estatística é maior que o numero de veículos na folha de registo"
 
     #passengers
     passengers = 0
@@ -135,8 +145,8 @@ def upload_file(new_file):
     new_file.close()
     print ("All instances Created, updating database!")
 
-    report_db_action = Report.get_db_action(date,gate, start_time,end_time)
     try:
+        report_db_action = Report.get_db_action(date,gate, start_time,end_time)
         if report_db_action == "replace":
             report_old = Report.get_report(date,start_time,end_time,gate)
             entrances_old = Entrance.get_entrances_of_report(report_old)
@@ -147,23 +157,30 @@ def upload_file(new_file):
 
             for entrance in entrances_old:
                 db.session.delete(entrance)
-                db.session.delete(report_old)
+            db.session.delete(report_old)
         elif report_db_action == "invalid":
             raise Exception(
-                "new report is within the time range of another report")
+                "==> Error, new report is within the time range of another report")
     except Exception as err:
         print (err)
         return ("error",[],[],
                 "Já existe um registo na base de dados durante \
-                este período ({}->{})".format(start_time, end_time))
+                este período ({} -> {})".format(start_time, end_time))
 
     db.session.add(report)
     for entrance in entrance_obj_list:
         db.session.add(entrance)
-    db.session.commit()
     print("database updated for: {} with report id: {}"
           .format(new_file.filename,report.id))
 
+    if report_db_action == "valid":
+        description = "carregou {}".format(report)
+    elif report_db_action == "replace":
+        description = "carregou {} substituindo {}".format(report,report_old)
+
+    log = Log(description = description,user = current_user)
+    db.session.add(log)
+    db.session.commit()
     error_message = ""
 
     return report, entrance_obj_list, error_list, error_message
@@ -227,7 +244,6 @@ def save_corrections(saved_corrections):
 
 
 #returns a tuple (entrance_obj_list, error_list)
-#TODO: is_typo() not working properly
 def get_entrance_list(sheet,report):
     #get list of payed entrances
     col_number = 1
@@ -240,6 +256,7 @@ def get_entrance_list(sheet,report):
     vehicle_types_list = Vehicle_type.get_vehicle_types_list()
     countries_list = Country.get_countries_list()
     municipalities_list = Municipality.get_municipalities_list()
+
 
     vt_alias_dict = Vehicle_type_alias.get_dict()
     c_alias_dict = Country_alias.get_dict()
@@ -318,7 +335,6 @@ def get_entrance_list(sheet,report):
 
 
 def get_hours(sheet):
-
     start_hour = str(sheet['R5'].value)
     start_minute = str(sheet['T5'].value)
     end_hour = str(sheet['V5'].value)
@@ -331,14 +347,29 @@ def get_hours(sheet):
 
 
 def get_vehicles(sheet):
-    vehicles = 0
-    for row in sheet.iter_rows(min_col = 20,
-                               max_col = 20,
-                               min_row = 11,
-                               max_row = 18,):
-        for cell in row:
-            if cell.value:
-                vehicles += cell.value
+    vehicles = {"total": 0,
+                "bikes": 0,
+                "lightduty": 0,
+                "lightdutyXL": 0,
+                "caravans": 0,
+                "busses": 0}
+
+    if sheet['T11'].value : vehicles['bikes'] += sheet['T11'].value
+    if sheet['T12'].value : vehicles['bikes'] += sheet['T12'].value
+    if sheet['T13'].value : vehicles['lightduty'] += sheet['T13'].value
+    if sheet['T14'].value : vehicles['lightduty'] += sheet['T14'].value
+    if sheet['T15'].value : vehicles['lightdutyXL'] += sheet['T15'].value
+    if sheet['T16'].value : vehicles['caravans'] += sheet['T16'].value
+    if sheet['T17'].value : vehicles['busses'] += sheet['T17'].value
+    if sheet['T18'].value : vehicles['busses'] += sheet['T18'].value
+
+    vehicles['total'] = (vehicles['bikes'] +
+                         vehicles['lightduty'] +
+                         vehicles['lightdutyXL'] +
+                         vehicles['caravans'] +
+                         vehicles['busses']
+    )
+
     return vehicles
 
 

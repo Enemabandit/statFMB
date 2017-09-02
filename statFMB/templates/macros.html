@@ -125,20 +125,6 @@
                        role="button"
                        aria-haspopup="true"
                        aria-expanded="false">
-                        Pendente
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a href="/under_construction">Receitas</a></li>
-                        <li><a href="/under_construction">Correções</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle"
-                       data-toggle="dropdown"
-                       role="button"
-                       aria-haspopup="true"
-                       aria-expanded="false">
                         Correções
                         <span class="caret"></span>
                     </a>
@@ -190,6 +176,34 @@
                         <li><a href="/under_construction">Corrigir</a></li>
                         <li><a href="/under_construction">Disponibilidades</a>
                         </li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-haspopup="true"
+                       aria-expanded="false">
+                        Pendente
+                        {% if current_user.pending_reports > 0 %}
+                        <span class="badge">
+                            {{ current_user.pending_reports }}
+                        </span>
+                        {% endif %}
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a href="/validateReports">
+                                Receitas
+                                {% if current_user.pending_reports > 0 %}
+                                <span class="badge pull-right">
+                                    {{ current_user.pending_reports }}
+                                </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li><a href="/under_construction">Correções</a></li>
                     </ul>
                 </li>
                 {% endif %}

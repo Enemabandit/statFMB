@@ -23,9 +23,14 @@
     <br>
 
     <!-- chart_form -->
-    <div class ="row">
-    <div class="col-md-4">
-
+    <div class="col-md-3">
+        <h4><b>Detalhes da Pesquisa</b></h4>
+        <h4><b>Porta:</b> {{ gate }}</h4>
+        <h4><b>Período:</b> {{ period_str }}</h4>
+        <h4><b>Resultados de:</b></h4>
+        <h4>{{ lower_date }} <b>a</b> {{ upper_date }}</h4>
+    </div>
+    <div class="col-md-6">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <div class="row">
@@ -271,21 +276,10 @@
 
     <!-- chart renderer -->
     <div class="row">
-        <div class="col-md-3">
-                <h5><b>Resultados de:</b>
-                    {{ lower_date }} <b>a</b> {{ upper_date }}</h5>
-        </div>
-        <div class="col-md-2">
-        <h5><b>Porta:</b> {{ gate }}</h5>
-        </div>
-        <div class="col-md-2">
-        <h5><b>Período:</b> {{ period_str }}</h5>
-        </div>
         <div class="col-md-12">
             <div id="chart-container">
             </div>
         </div>
-    </div>
     </div>
 </div>
 {% else %}

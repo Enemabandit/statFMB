@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% from "macros.html" import FMB_logo %}
+
+{% block title %}Validar Receitas{% endblock %}
+{% block page_header%}Validar Receitas{% endblock %}
+
+{% block body%}
+
+<!-- Page Title -->
+<div class ="container">
+    {% if report_list != [] %}
+    <div class="row">
+        <form action="/listUser" method="POST">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-md-1">
+                        <h3 class="panel-title text-right">Porta</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="panel-title text-center">Data - Turno</h3>
+                    </div>
+                    <div class="col-md-1">
+                        <h3 class="panel-title text-center">Total</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="panel-title">Utilizador</h3>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h3 class="panel-title">Ações</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                {% for report in report_list %}
+                <div class="row">
+                    <div class="col-md-1 text-right">
+                        <h5> {{ report.gate }} </h5>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5>{{ report.date }} - {{ report.start_time }} às {{report.end_time }}</h5>
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <h5> <b>{{ report.total }}€ </b></h5>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>{{ report.user }}</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="col-md-4">
+                            <button class="btn btn-success"
+                                    type="submit"
+                                    formaction="/validateReport"
+                                    name="report_id" value="{{ report.id }}">
+                                Validar
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-danger"
+                                    type="submit"
+                                    formaction="/deleteReport"
+                                    name="report_id" value="{{ report.id }}">
+                                Eliminar
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <!-- TODO: don't forget to rework this body
+                               not working-->
+                            <button class="btn btn-success"
+                                    formaction="mailto:{{ report.email }}?subject=Retificação%20de%20Receita&body=aaaa%0Aaaaa"
+                                    >
+
+                                Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                {% endfor %}
+            </div>
+        </div>
+        <button class="btn btn-success pull-right">Validar Todos</button>
+        </form>
+    </div>
+    {% else %}
+    <br>
+    {{ FMB_logo() }}
+
+    {% endif %}
+</div>
+
+{% endblock %}
