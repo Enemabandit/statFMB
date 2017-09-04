@@ -9,7 +9,6 @@ from .statFMB import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
 from .utils import is_within_interval
 
 ##Report related models
-#TODO: make vehicles and all types be read from regSheet and saves in object
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
@@ -115,6 +114,22 @@ class Report(db.Model):
                     free_interval_list.remove(interval_outdated)
                     free_interval_list.extend(interval_updated)
         return free_interval_list
+
+    def get_filename(self,file_ext = None):
+        if file_ext != None:
+            if file_ext == ".xls":
+                file_ext = "xls"
+            return "{}_{}_{}_{}.{}".format(self.date.strftime("%d-%m-%y"),
+                                           self.start_time.strftime("%H-%M"),
+                                           self.end_time.strftime("%H-%M"),
+                                           self.user.alias,
+            file_ext)
+        else:
+            return "{}_{}_{}_{}".format(self.date.strftime("%d-%m-%y"),
+                                        self.start_time.strftime("%H-%M"),
+                                        self.end_time.strftime("%H-%M"),
+                                        self.user.alias)
+
 
     def to_dict(self):
         total = ( 5 * self.lightduty +
@@ -439,6 +454,15 @@ class User(db.Model, UserMixin):
     @classmethod
     def get_user_list(cls):
         return cls.query.all()
+
+    @classmethod
+    def get_users_by_role(cls, role):
+        user_list_raw = cls.get_user_list()
+        user_list = []
+        for user in user_list_raw:
+            if user.get_role() == role:
+                user_list.append(user)
+        return user_list
 
     @classmethod
     def get_user_by_id(cls, user_id):

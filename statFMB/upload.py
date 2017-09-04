@@ -1,25 +1,27 @@
-from datetime import date, datetime
-
 import xlrd
+
+from datetime import date, datetime
 from openpyxl import load_workbook, worksheet
 from openpyxl.workbook import Workbook
 from openpyxl.reader.excel import load_workbook, InvalidFileException
 
-from .statFMB import db, Report, current_user
+from .statFMB import db, Report, current_user, app
 from .models import *
 from .utils import clear_str, represents_int
+from .files import save_unvalidated_file, delete_file
 
 #TODO: create a pending entrances, mainly for email script but also
 #      so we don't loose invalid entrances
 
 #returns a Dict with results from the update, indexed by file
-def update_database(new_files):
+def update_database(new_files,user = current_user):
 
     upload_results = {}
     failed_uploads = {}
     for new_file in new_files:
 
-        report,entrance_obj_list,error_list,error_msg = upload_file(new_file)
+        report,entrance_obj_list,error_list,error_msg = upload_file(new_file,
+                                                                    user)
         if report != "error":
             upload_results[new_file.filename] = [report,
                                                  entrance_obj_list,
@@ -30,15 +32,16 @@ def update_database(new_files):
     return upload_results, failed_uploads
 
 
-def upload_file(new_file):
+def upload_file(new_file, user):
     print("inserting: {} in database.".format(new_file.filename))
 
     ##load uploaded file and sheets
     try:
-        if new_file.filename[-4:] == ".xls":
+        file_ext = new_file.filename[-4:]
+        if file_ext == ".xls":
             wb = open_xls_as_xlsx(new_file)
         else:
-            wb = load_workbook(new_file, read_only = True, data_only = True)
+            wb = load_workbook(new_file, read_only = False, data_only = True)
     except Exception as err:
         print (err)
         return "error",[],[],"Ficheiro inválido"
@@ -123,9 +126,10 @@ def upload_file(new_file):
                     pawns = pawns,
                     bicicles = bicicles,
                     gate = gate,
-                    user = current_user,
+                    user = user,
     )
     print("==> Report Created!")
+
 
     print("==> Instanciating entrances!")
     #entrances
@@ -142,7 +146,6 @@ def upload_file(new_file):
     for entrance in entrance_obj_list:
         passengers += entrance.passengers
 
-    new_file.close()
     print ("All instances Created, updating database!")
 
     try:
@@ -152,20 +155,41 @@ def upload_file(new_file):
             entrances_old = Entrance.get_entrances_of_report(report_old)
 
             print("Report already exists in the database, replacing!")
+
+            if report_old.validated == True:
+                message = ("Este relatório já foi validado," +
+                " caso queira fazer alterações contacte os serviços")
+                raise Exception("==> Error, report was already validated")
+
             print("==> {} entrances deleted!".format(len(entrances_old)))
             print("==> Report {} deleted!".format(report_old.id))
 
             for entrance in entrances_old:
                 db.session.delete(entrance)
             db.session.delete(report_old)
+
+            filename = report_old.get_filename(file_ext)
+            delete_file(filename = filename,validated = False)
+
         elif report_db_action == "invalid":
+            message = "Já existe um registo na base de dados durante \
+                este período ({} -> {})".format(start_time, end_time)
             raise Exception(
                 "==> Error, new report is within the time range of another report")
     except Exception as err:
         print (err)
-        return ("error",[],[],
-                "Já existe um registo na base de dados durante \
-                este período ({} -> {})".format(start_time, end_time))
+        return ("error",[],[],message)
+
+
+    try:
+        filename = report.get_filename(file_ext)
+        save_unvalidated_file(wb,filename)
+        wb.close()
+    except Exception as err:
+        wb.close()
+        print(err)
+        return ("error",[],[], "erro ao guardar ficheiro no servidor")
+
 
     db.session.add(report)
     for entrance in entrance_obj_list:
@@ -178,7 +202,7 @@ def upload_file(new_file):
     elif report_db_action == "replace":
         description = "carregou {} substituindo {}".format(report,report_old)
 
-    log = Log(description = description,user = current_user)
+    log = Log(description = description,user = user)
     db.session.add(log)
     db.session.commit()
     error_message = ""
@@ -335,10 +359,10 @@ def get_entrance_list(sheet,report):
 
 
 def get_hours(sheet):
-    start_hour = str(sheet['R5'].value)
-    start_minute = str(sheet['T5'].value)
-    end_hour = str(sheet['V5'].value)
-    end_minute = str(sheet['X5'].value)
+    start_hour = str(int(sheet['R5'].value))
+    start_minute = str(int(sheet['T5'].value))
+    end_hour = str(int(sheet['V5'].value))
+    end_minute = str(int(sheet['X5'].value))
 
     start_time_str = start_hour + "-" + start_minute
     end_time_str = end_hour + "-" + end_minute

@@ -10,7 +10,7 @@
 <div class ="container">
     {% if report_list != [] %}
     <div class="row">
-        <form action="/listUser" method="POST">
+        <form action="{{ url_for('listUsers') }}" method="POST">
         <div class="panel panel-success">
             <div class="panel-heading">
                 <div class="row">
@@ -50,7 +50,7 @@
                         <div class="col-md-4">
                             <button class="btn btn-success"
                                     type="submit"
-                                    formaction="/validateReport"
+                                    formaction="{{url_for('validateReport')}}"
                                     name="report_id" value="{{ report.id }}">
                                 Validar
                             </button>
@@ -58,7 +58,7 @@
                         <div class="col-md-4">
                             <button class="btn btn-danger"
                                     type="submit"
-                                    formaction="/deleteReport"
+                                    formaction="{{ url_for('deleteReport')}}"
                                     name="report_id" value="{{ report.id }}">
                                 Eliminar
                             </button>
@@ -79,7 +79,8 @@
                 {% endfor %}
             </div>
         </div>
-        <button class="btn btn-success pull-right">Validar Todos</button>
+        <button class="btn btn-success pull-right"
+                disabled>Validar Todos</button>
         </form>
     </div>
     {% else %}

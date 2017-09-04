@@ -12,7 +12,12 @@
             <h4><b>Recomendações:</b></h4>
             <p>
                 Reconhece os relatórios em vigor no ano 2017
-                no formato .xls ou .xlsx
+                no formato .xls ou .xlsx, No entanto é recomendado
+                utilizar o
+                <a href="FILE TO DOWNLOAD" download="Original.xlsx">
+                    exemplar dispoível aqui
+                </a>
+                .
             </p>
             <hr>
             <p>
@@ -33,19 +38,15 @@
             </p>
             <hr>
             <p>
-                <a href="FILE TO DOWNLOAD" download="Original.xlsx">
-                    Descarregar exemplar
-                </a>
-            </p>
-            <p>
                 Em caso de problema contactar: 
-                <a href="mailto:maia.coelho.dev@gmail.com">
+                <a href="mailto:maia.coelho.dev@gmail.com?subject=Problemas%20com%20Upload">
                     maia.coelho.dev@gmail.com
                 </a>
             </p>
         </div>
         <div class ="col-md-6">
-        <form method="POST" enctype="multipart/form-data" action="/upload">
+            <form method="POST" enctype="multipart/form-data"
+                  action="{{ url_for('upload') }}">
             {% if current_user.role == "Administrador" %}
             <div class="row">
             <div class="col-md-5">
@@ -68,8 +69,10 @@
             {% endif %}
             <div class="form-group">
                 <div class="form-group">
-                    <input type="file" name="file[]" multiple=""
-                           accept=".xls,.xlsx">
+                    <input type="file" name="files"
+                           accept=".xls,.xlsx"
+                           multiple
+                    >
                 </div>
                 <button type="submit" value="upload"
                         class="btn btn-success btn-lg">Carregar

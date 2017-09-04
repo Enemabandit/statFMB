@@ -9,7 +9,7 @@
           {% if upload_results %}
           <div class="row">
               <div class ="panel-group">
-                  <form method="POST" action="/upload/finalize">
+                  <form method="POST" action="{{url_for('upload_finalize')}}">
                   {% for result in upload_results %}
                   <div class="panel panel-success">
                       <div class="panel-heading">

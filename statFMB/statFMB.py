@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request, redirect, request, json
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, \
@@ -7,20 +9,18 @@ from flask_security.utils import encrypt_password, verify_password
 from datetime import date, datetime
 from json import dumps
 
+
 #TODO: setup SSL
-#TODO: create instance for config (SECURITY)
 #TODO: websockets to log user disconnection
 #TODO: create a way to save failed entrances and forget button
 #TODO: progress bar when uploading files(sockets)
-#TODO: some users don't change the hours in the report when working half days,
-#      this needs to be reworked in order to get the needed data.
+#TODO: config from objects
+#TODO: redo how save button in finalizeUploads work when there is only file
+#      and it errors
 
-app=Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI']='mysql://statFMB:statFMB@localhost/test2'
-app.config['SECRET_KEY'] = 'DontTellAnyone'
-#security config
-app.config['SECURITY_PASSWORD_SALT']='HMAC'
+app = Flask(__name__)
+app.config.from_pyfile('config.cfg')
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 db = SQLAlchemy(app)
 
@@ -29,11 +29,12 @@ from .models import *
 from .db_create import create_tables
 from .upload import update_database, save_corrections
 from .utils import Alert
+from .files import  delete_file, copy_to_validated_folder
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-# Create a user to test with
+# Create users to test with
 # @app.before_first_request
 # def create_user():
 #    create_tables()
@@ -68,7 +69,6 @@ security = Security(app, user_datastore)
 #                               alias= 'DEB')
 #    user_datastore.add_role_to_user('debug@fmb.pt', 'Administrador')
 #    db.session.commit()
-
 
 @app.route('/')
 def index():
@@ -396,7 +396,6 @@ def logs():
             upper_time = datetime.strptime((upper_date + "-23-59-59"),
                                            "%Y-%m-%d-%H-%M-%S")
             user_email = request.form['email']
-
             if lower_date > upper_date:
                 lower_date = date(2016,1,1)
                 upper_date = date.today()
@@ -443,7 +442,9 @@ def validateReport():
         if request.method == 'POST':
             report_id = request.form['report_id']
             report = Report.get_report_by_id(report_id)
+            copy_to_validated_folder(report.get_filename())
             report.validated = True
+
             print("=> Report {} validated".format(report))
             description = "receita {} validada.".format(report)
             log = Log(description = "validou receita {}".format(report),
@@ -481,6 +482,9 @@ def deleteReport():
             for entrance in entrances:
                 db.session.delete(entrance)
             db.session.delete(report)
+
+            filename = report.get_filename()
+            delete_file(filename = filename,validated = False)
 
             print("=> report {} eliminated.".format(report))
             description = "receita {} Eliminada.".format(report)
@@ -643,13 +647,21 @@ def charts():
 @roles_accepted('Administrador','Portageiro')
 def upload():
     try:
-        if request.method == 'POST' and 'file[]' in request.files:
-            uploaded_files = request.files.getlist("file[]")
-            upload_results, failed_uploads = update_database(uploaded_files)
+        if request.method == 'POST' and 'files' in request.files:
+            uploaded_files = request.files.getlist("files")
+            if current_user.get_role() == "Administrador":
+                user_email = request.form['email']
+                user = user_datastore.get_user(user_email)
+                print(user)
+            else:
+                user = current_user
+            upload_results, failed_uploads = update_database(uploaded_files,
+                                                             user)
 
             vt_list = Vehicle_type.get_vehicle_types_list()
             c_list = Country.get_countries_list()
             m_list = Municipality.get_municipalities_list()
+
 
             return render_template("upload.html",
                                    upload_results = upload_results,
@@ -661,7 +673,7 @@ def upload():
 
         return render_template("uploadFiles.html",
                                current_user = current_user.to_dict(),
-                               user_list = User.get_user_list(),
+                               user_list = User.get_users_by_role("Portageiro"),
         )
     except Exception as e:
         return(str(e))
@@ -719,5 +731,7 @@ def upload_finalize():
         return(str(e))
 
 
+###TODO: IMPORTANT!!! THIS IS FOR DEVELOPMENT SERVER ONLY
+##       #DO NOT USE IN PRDUCTION SERVER
 if __name__ == "__main__":
     app.run()
