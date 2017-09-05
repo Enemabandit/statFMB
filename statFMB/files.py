@@ -80,6 +80,7 @@ def find_folder(filename, create = False):
     month_folder = os.path.join(year_folder, date.strftime("%B"))
     day_folder = os.path.join(month_folder, date.strftime("%d"))
 
+    folder = None
     if os.path.isdir(year_folder):
         if os.path.isdir(month_folder):
             if os.path.isdir(day_folder):

@@ -5,292 +5,300 @@
 {% block page_header%}Relatório de Carregamento{% endblock %}
 
 {% block body%}
-      <div class="container">
-          {% if upload_results %}
-          <div class="row">
-              <div class ="panel-group">
-                  <form method="POST" action="{{url_for('upload_finalize')}}">
-                  {% for result in upload_results %}
-                  <div class="panel panel-success">
-                      <div class="panel-heading">
-                          <div class="row">
-                              <div class="col-md-6">
-                                  <h3 class="panel-title">
-                                      Ficheiro: {{ result }}
-                                  </h3>
-                              </div>
-                              <div class="col-md-3">
-                                  <h3 class="panel-title">
-                                      Registos efetuados:
-                                      {{ upload_results[result][1]|length }}
-                                  </h3>
-                              </div>
-                              <div class="col-md-3">
-                                  <h3 class="panel-title">
-                                      Registos falhados:
-                                      {{ upload_results[result][2]|length }}
-                                  </h3>
-                              </div>
-                          </div>
-                      </div>
-                      {% for invalid_entry in upload_results[result][2] %}
-                      <div class="panel-body">
+<div class="container">
+    {% if upload_results %}
+    <div class="row">
+        <div class ="panel-group">
+            <form method="POST" action="{{url_for('upload_finalize')}}">
+            {% for result in upload_results %}
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="panel-title">
+                                Ficheiro: {{ result }}
+                            </h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="panel-title">
+                                Registos efetuados:
+                                {{ upload_results[result][1]|length }}
+                            </h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="panel-title">
+                                Registos falhados:
+                                {{ upload_results[result][2]|length }}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                {% for invalid_entry in upload_results[result][2] %}
+                <div class="panel-body">
 
-                          <input type="hidden" name="vt_failed"
-                                 value="{{ invalid_entry[0] }}" />
-                          <input type="hidden" name="c_failed"
-                                 value="{{ invalid_entry[2] }}" />
-                          <input type="hidden" name="m_failed"
-                                 value="{{ invalid_entry[3] }}" />
+                    <input type="hidden" name="vt_failed"
+                            value="{{ invalid_entry[0] }}" />
+                    <input type="hidden" name="c_failed"
+                            value="{{ invalid_entry[2] }}" />
+                    <input type="hidden" name="m_failed"
+                            value="{{ invalid_entry[3] }}" />
 
-                          <div class="form-inline">
-                          <div class="form-group col-md-4">
-                              <label  class="control-label col-md-6" for="vt">
-                                  <h5>Viatura lida:
-                                      <b>{{ invalid_entry[0] }}</b>
-                                  </h5>
-                              </label>
+                    <div class="form-inline">
+                    <div class="form-group col-md-4">
+                        <label  class="control-label col-md-6" for="vt">
+                            <h5>Viatura lida:
+                                <b>{{ invalid_entry[0] }}</b>
+                            </h5>
+                        </label>
 
-                              <div class="container col-md-6">
-                                  {% for vt in vt_list
-                                  if vt == invalid_entry[0] %}
+                        <div class="container col-md-6">
+                            {% for vt in vt_list
+                            if vt == invalid_entry[0] %}
 
-                                  <select class="form-control" id="vt"
-                                              style="width: 150px"
-                                          name="vt"
-                                          disabled>
-                                      <option selected="selected"
-                                              value="{{ vt }}">
-                                          {{ vt }}
-                                      </option>
-                                  </select>
-                                  <input type="hidden" name="vt"
-                                         value="{{ vt }}" />
+                            <select class="form-control" id="vt"
+                                        style="width: 150px"
+                                    name="vt"
+                                    disabled>
+                                <option selected="selected"
+                                        value="{{ vt }}">
+                                    {{ vt }}
+                                </option>
+                            </select>
+                            <input type="hidden" name="vt"
+                                    value="{{ vt }}" />
 
-                                  {% else %}
+                            {% else %}
 
-                                  <select class="form-control" id="vt"
-                                          name="vt"
-                                          style="width: 150px"
-                                          required>
-                                      <option disabled selected value>
-                                          CORRIGIR
-                                      </option>
-                                      {% for vt in vt_list %}
-                                      <option value="{{ vt }}">
-                                          {{ vt }}
-                                      </option>
-                                      {% endfor%}
-                                  </select>
-                                  {% endfor %}
-                              <input type="hidden" name="vt_error"
-                                     value = "{{ invalid_entry[0] }}" />
+                            <select class="form-control" id="vt"
+                                    name="vt"
+                                    style="width: 150px"
+                                    required>
+                                <option disabled selected value>
+                                    CORRIGIR
+                                </option>
+                                {% for vt in vt_list %}
+                                <option value="{{ vt }}">
+                                    {{ vt }}
+                                </option>
+                                {% endfor%}
+                            </select>
+                            {% endfor %}
+                        <input type="hidden" name="vt_error"
+                                value = "{{ invalid_entry[0] }}" />
 
-                              <input type="hidden" name="p"
-                                 value="{{ invalid_entry[1] }}" />
-                              </div>
-                          </div>
+                        <input type="hidden" name="p"
+                            value="{{ invalid_entry[1] }}" />
+                        </div>
+                    </div>
 
-                          <div class="form-group col-md-4">
-                              <label  class="control-label col-md-6" for="c">
-                                  <h5
-                                      data-toggle="tooltip"
-                                      data-placement="bottom"
-                                      title="clique aqui para uma pesquisa
-                                                   rápida no google."
+                    <div class="form-group col-md-4">
+                        <label  class="control-label col-md-6" for="c">
+                            <h5
+                                data-toggle="tooltip"
+                                data-placement="bottom"
+                                title="clique aqui para uma pesquisa
+                                            rápida no google."
 
-                                  >
-                                      <a href="https://www.google.pt/search?q={{ invalid_entry[2] }}"
-                                         target="_blank"
-                                         style="text-decoration: inherit;
-                                               color: inherit;">
-                                          País lido:
-                                          <b>{{ invalid_entry[2] }}</b>
-                                      </a>
-                                  </h5>
-                              </label>
-                              <div class="container col-md-6">
-                                  {% for c in c_list
-                                  if c == invalid_entry[2]
-                                  and invalid_entry[2] != "N/A" %}
-                                  <select class="form-control" id="c" name="c"
-                                              style="width: 150px"
-                                          disabled>
-                                      <option selected="selected"
-                                              value="{{ c }}">
-                                          {{ c }}
-                                      </option>
-                                  </select>
-                                  <input type="hidden" name="c"
-                                         value="{{ c }}" />
-                                  {% else %}
+                            >
+                                <a href="https://www.google.pt/search?q={{ invalid_entry[2] }}"
+                                    target="_blank"
+                                    style="text-decoration: inherit;
+                                        color: inherit;">
+                                    País lido:
+                                    <b>{{ invalid_entry[2] }}</b>
+                                </a>
+                            </h5>
+                        </label>
+                        <div class="container col-md-6">
+                            {% for c in c_list
+                            if c == invalid_entry[2]
+                            and invalid_entry[2] != "N/A" %}
+                            <select class="form-control" id="c" name="c"
+                                        style="width: 150px"
+                                    disabled>
+                                <option selected="selected"
+                                        value="{{ c }}">
+                                    {{ c }}
+                                </option>
+                            </select>
+                            <input type="hidden" name="c"
+                                    value="{{ c }}" />
+                            {% else %}
 
-                                      {% if invalid_entry[2] != "N/A" %}
-                                  <select class="form-control" id="c" name="c"
-                                          style="width: 150px"
-                                          data-toggle="tooltip"
-                                          data-placement="top"
-                                          title="clique no país lido para
-                                                 uma pesquisa rápida no
-                                                 google.
-                                                 Atenção! os nomes começados
-                                                 por acento estão no fim da
-                                                 lista."
-                                          required>
-                                      <option disabled selected value>
-                                          CORRIGIR
-                                      </option>
-                                      {% else %}
-                                      <select class="form-control" id="c"
-                                              style="width: 150px"
-                                              name="c">
-                                          <option selected ="selected"
-                                                  value="N/A">
-                                          N/A
-                                      </option>
-                                      {% endif %}
+                                {% if invalid_entry[2] != "N/A" %}
+                            <select class="form-control" id="c" name="c"
+                                    style="width: 150px"
+                                    data-toggle="tooltip"
+                                    data-placement="top"
+                                    title="clique no país lido para
+                                            uma pesquisa rápida no
+                                            google.
+                                            Atenção! os nomes começados
+                                            por acento estão no fim da
+                                            lista."
+                                    required>
+                                <option disabled selected value>
+                                    CORRIGIR
+                                </option>
+                                {% else %}
+                                <select class="form-control" id="c"
+                                        style="width: 150px"
+                                        name="c">
+                                    <option selected ="selected"
+                                            value="N/A">
+                                    N/A
+                                </option>
+                                {% endif %}
 
-                                      {% for c in c_list %}
-                                      <option value="{{ c }}">
-                                          {{ c }}
-                                      </option>
-                                      {% endfor%}
-                                  </select>
-                                  {% endfor %}
-                              </div>
-                          </div>
+                                {% for c in c_list %}
+                                <option value="{{ c }}">
+                                    {{ c }}
+                                </option>
+                                {% endfor%}
+                            </select>
+                            {% endfor %}
+                        </div>
+                    </div>
 
 
-                          <div class="form-group col-md-4">
-                              <label  class="control-label col-md-6" for="m">
-                                  <h5
-                                      data-toggle="tooltip"
-                                      data-placement="bottom"
-                                      title="clique aqui para uma pesquisa
-                                                   rapida no google."
-                                  >
-                                      <a href="https://www.google.pt/search?q={{ invalid_entry[3] }}"
-                                         target="_blank"
-                                         style="text-decoration: inherit;
-                                               color: inherit;">
-                                          Concelho lido:
-                                          <b>{{ invalid_entry[3] }}</b>
-                                      </a>
-                                  </h5>
-                              </label>
-                              <div class="container col-md-6">
-                                  {% for m in m_list
-                                  if m == invalid_entry[3]
-                                  and invalid_entry[3] != "N/A" %}
-                                  <select class="form-control" id="m" name="m"
-                                          style="width: 150px"
-                                          disabled>
-                                      <option selected="selected"
-                                              value="{{ m }}">
-                                          {{ m }}
-                                      </option>
-                                  </select>
-                                  <input type="hidden" name="m"
-                                         value="{{ m }}" />
-                                  {% else %}
+                    <div class="form-group col-md-4">
+                        <label  class="control-label col-md-6" for="m">
+                            <h5
+                                data-toggle="tooltip"
+                                data-placement="bottom"
+                                title="clique aqui para uma pesquisa
+                                            rapida no google."
+                            >
+                                <a href="https://www.google.pt/search?q={{ invalid_entry[3] }}"
+                                    target="_blank"
+                                    style="text-decoration: inherit;
+                                        color: inherit;">
+                                    Concelho lido:
+                                    <b>{{ invalid_entry[3] }}</b>
+                                </a>
+                            </h5>
+                        </label>
+                        <div class="container col-md-6">
+                            {% for m in m_list
+                            if m == invalid_entry[3]
+                            and invalid_entry[3] != "N/A" %}
+                            <select class="form-control" id="m" name="m"
+                                    style="width: 150px"
+                                    disabled>
+                                <option selected="selected"
+                                        value="{{ m }}">
+                                    {{ m }}
+                                </option>
+                            </select>
+                            <input type="hidden" name="m"
+                                    value="{{ m }}" />
+                            {% else %}
 
-                                      {% if invalid_entry[3] != "N/A" %}
-                                  <select class="form-control" id="m" name="m"
-                                          style="width: 150px"
-                                          data-toggle="tooltip"
-                                          data-placement="top"
-                                          title="clique no concelho lido para
-                                                 uma pesquisa rápida no
-                                                 google.
-                                                 Atenção! os nomes começados
-                                                 por acento estão no fim da
-                                                 lista."
-                                          required>
-                                      <option disabled selected value>
-                                          CORRIGIR
-                                      </option>
-                                      {% else %}
-                                      <select class="form-control" id="m"
-                                              name="m"
-                                              style="width: 150px"
-                                      >
-                                      <option selected="selected"
-                                              value ="N/A">
-                                          N/A
-                                      </option>
-                                      {% endif %}
+                                {% if invalid_entry[3] != "N/A" %}
+                            <select class="form-control" id="m" name="m"
+                                    style="width: 150px"
+                                    data-toggle="tooltip"
+                                    data-placement="top"
+                                    title="clique no concelho lido para
+                                            uma pesquisa rápida no
+                                            google.
+                                            Atenção! os nomes começados
+                                            por acento estão no fim da
+                                            lista."
+                                    required>
+                                <option disabled selected value>
+                                    CORRIGIR
+                                </option>
+                                {% else %}
+                                <select class="form-control" id="m"
+                                        name="m"
+                                        style="width: 150px"
+                                >
+                                <option selected="selected"
+                                        value ="N/A">
+                                    N/A
+                                </option>
+                                {% endif %}
 
-                                      {% for m in m_list %}
-                                      <option value="{{ m }}">
-                                          {{ m }}
-                                      </option>
-                                      {% endfor%}
-                                  </select>
-                                  {% endfor %}
-                              </div>
-                          </div>
-                          </div>
+                                {% for m in m_list %}
+                                <option value="{{ m }}">
+                                    {{ m }}
+                                </option>
+                                {% endfor%}
+                            </select>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    </div>
 
-                      </div>
-                      {% endfor %}
-                      <input type="hidden" name="reports"
-                             value = {{ upload_results[result][0].id }} />
-                      <input type="hidden" name="num_entrances"
-                             value = {{ upload_results[result][2]|length }} />
-                  </div>
-                  {% endfor %}
-          {% endif %}
-                  {% if failed_uploads %}
-                  <div class="container">
-                  <h3>Ficheiros não carregados:</h3>
-                  <div class="row">
-                      <div class ="panel-group">
-                          {% for failed_file in failed_uploads %}
-                          <div class="panel panel-danger">
-                              <div class="panel-heading">
-                                  <div class="row">
-                                      <div class="col-md-6">
-                                          <h3 class="panel-title">
-                                              Ficheiro: {{ failed_file }}
-                                          </h3>
-                                      </div>
-                                      <div class="col-md-6">
-                                          <h3 class="panel-title">
-                                              <b>Erro ao carregar: </b>
-                                              {{ failed_uploads[failed_file] }}
-                                          </h3>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                          {% endfor %}
-                      </div>
-                  </div>
-                  </div>
-                  {% endif %}
-                  <hr>
-                  <div class="row">
-                      <div class="col-md-3">
-                          <button type="submit"
-                                  class="btn btn-default btn-lg btn-block"
-                                  disabled="disabled">
-                              <span class="glyphicon glyphicon-floppy-remove"
-                                    aria-hidden="true"></span>
-                              Esquecer
-                          </button>
-                      </div>
-                      <div class="col-md-9">
-                          <button type="submit" class="btn btn-success
-                                                       btn-lg btn-block">
-                              <span class="glyphicon glyphicon-floppy-disk"
-                                    aria-hidden="true"></span>
-                              Guardar
-                          </button>
-                      </div>
-                  </div>
-                  </form>
-              </div>
-              </div>
-      </div>
+                </div>
+                {% endfor %}
+                <input type="hidden" name="reports"
+                        value = {{ upload_results[result][0].id }} />
+                <input type="hidden" name="num_entrances"
+                        value = {{ upload_results[result][2]|length }} />
+            </div>
+            {% endfor %}
+    {% endif %}
+            {% if failed_uploads %}
+            <div class="container">
+            <h3>Ficheiros não carregados:</h3>
+            <div class="row">
+                <div class ="panel-group">
+                    {% for failed_file in failed_uploads %}
+                    <div class="panel panel-danger">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h3 class="panel-title">
+                                        Ficheiro: {{ failed_file }}
+                                    </h3>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3 class="panel-title">
+                                        <b>Erro ao carregar: </b>
+                                        {{ failed_uploads[failed_file] }}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            </div>
+            {% endif %}
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    <button type="submit"
+                            class="btn btn-default btn-lg btn-block"
+                            disabled="disabled">
+                        <span class="glyphicon glyphicon-floppy-remove"
+                            aria-hidden="true"></span>
+                        Esquecer
+                    </button>
+                </div>
+                <div class="col-md-9">
+                    <button type="submit" class="btn btn-success
+                                                btn-lg btn-block">
+                        <span class="glyphicon glyphicon-floppy-disk"
+                            aria-hidden="true"></span>
+                        Guardar
+                    </button>
+                </div>
+            </div>
+            </form>
+        </div>
+        </div>
+</div>
+
+<!-- this should be implemented somehow
+<script>
+    $(window).on("unload",function(e) {
+       // alert("msg","title");
+    });
+</script>
+-->
 
 {% endblock %}

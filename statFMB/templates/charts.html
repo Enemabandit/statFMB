@@ -20,229 +20,162 @@
     <!-- search_form -->
     {{ search_form("charts",lower_date,upper_date,date_warning) }}
     {% if search_made %}
-    <br>
-
     <!-- chart_form -->
     <div class ="row">
     <div class="col-md-4">
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h4 class="text-success text-center">
+            Escolha o gráfico pretendido
+        </h4>
 
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <div class="row">
-                    <!-- Nav tabs -->
-                    <ul class="nav nav-tabs nav-justified">
-                        <li class="active">
-                            <a href="#maps" role="tab"
-                               data-toggle="tab" class="text-success">
-                                <b>Mapa</b>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#pie" role="tab"
-                               data-toggle="tab" class="text-success">
-                                <b>Circular</b>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#line" role="tab"
-                               data-toggle="tab" class="text-success">
-                                <b>Cartesiano</b>
-                            </a>
-                        </li>
-                    </ul>
+        <div class="panel-group" id="accordion"
+             role="tablist" aria-multiselectable="true">
+            <div class="panel panel-success">
+                <div class="panel-heading" role="tab" id="headingOne">
+                    <h4 class="panel-title">
+                        <a role="button" data-toggle="collapse"
+                           data-parent="#accordion" href="#collapseOne"
+                           aria-expanded="true" aria-controls="collapseOne">
+                            Circular
+                        </a>
+                    </h4>
                 </div>
-                <div class="panel-body">
-                    <!-- Tab panes -->
-                    <div class="tab-content">
-                        <!-- Map charts pane -->
-                        <div class="tab-pane active" id="maps">
-                            <h4 class="text-success"> Visualizar no mapa: </h4>
-                            <div class="row">
-                                <div class="form-group col-md-3">
-                                    <label>
-                                    <input type="radio" name="optionsRadios"
-                                           id="maps-world" value="option2">
-                                    Mundo
-                                </label>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label>
-                                    <input type="radio" name="optionsRadios"
-                                           id="maps-europe" value="option2">
-                                    Europa
-                                </label>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label>
-                                    <input type="radio" name="optionsRadios"
-                                           id="maps-portugal" value="option2">
-                                    Portugal
-                                </label>
-                                </div>
-                            </div>
-                            <button class="btn btn-success" id="map-btn"
-                                    href="#" type="button"
-                                    style="float: right;">
-                                <span class="glyphicon glyphicon-share-alt"
-                                      aria-hidden="true"></span>
-                                Gerar
-                            </button>
+                <div id="collapseOne" class="panel-collapse collapse"
+                     role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body">
+                        <h4 class="text-success">
+                            Sumatórios de entradas:
+                        </h4>
+                        <div class="col-md-12 text-center"
+                             style="padding-bottom: 5px;">
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-success">
+                                <input type="radio" name="optionsRadios"
+                                       id="pie-gates" autocomplete="off" >
+                                Portas
+                            </label>
+                            <label class="btn btn-success">
+                                <input type="radio" name="optionsRadios"
+                                       id="pie-countries" autocomplete="off">
+                                Países
+                            </label>
+                            <label class="btn btn-success">
+                                <input type="radio" name="optionsRadios"
+                                       id="pie-municipalities"
+                                       autocomplete="off">
+                                Concelhos
+                            </label>
                         </div>
-                        <!-- Pie charts pane -->
-                        <div class="tab-pane" id="pie">
-                            <h4 class="text-success">
-                                Sumatórios de entradas:
-                            </h4>
-                            <div class="row">
-                                <div class="form-group col-md-3">
-                                    <label>
-                                    <input type="radio" name="optionsRadios"
-                                           id="pie-gates" value="option2">
-                                    Portas
-                                </label>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label>
-                                    <input type="radio" name="optionsRadios"
-                                           id="pie-countries" value="option2">
-                                    Paises
-                                    </label>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label>
-                                    <input type="radio"
-                                           name="optionsRadios"
-                                           id="pie-municipalities"
-                                           value="option2">
-                                    Concelhos
-                                    </label>
-                                </div>
-                            </div>
-                            <button class="btn btn-success" id="pie-btn"
-                                    href="#" type="button"
-                                    style="float: right;">
-                                <span class="glyphicon glyphicon-share-alt"
-                                      aria-hidden="true"></span>
-                                Gerar
-                            </button>
                         </div>
-                        <!-- Line charts pane -->
-                        <div class="tab-pane" id="line">
-                            <h4 class="text-success">Entradas por Período:</h4>
-                            <div class="row">
-                                <!-- xAxis container -->
-                                <div class="container col-md-4">
-                                    <h5><b>Eixo X:</b></h5>
-                                    <div class="checkbox col-md-3">
-                                        <label>
-                                        <input id="period-chk"
-                                               type="checkbox"
-                                               checked
-                                               disabled>
-                                        <b>Período</b>
-                                    </label>
-                                    </div>
-                                </div>
-
-                                <!-- yAxis container -->
-                                <h5><b>Eixo Y:</b></h5>
-                                <div class="container col-md-4">
-                                    <div class="row">
-                                        <div class="checkbox col-md-3">
-                                            <label>
-                                                <input id="vehicles-chk"
-                                                       type="checkbox">
-                                                <b>Viaturas</b>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="container col-md-offset-1
-                                                    col-md-3">
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="bikes-chk"
-                                                           type="checkbox">
-                                                    <b>Moto</b>
-                                                </label>
-                                            </div>
-
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="lightduty-chk"
-                                                           type="checkbox">
-                                                    <b>Ligeiro</b>
-                                                </label>
-                                            </div>
-
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="lightdutyXL-chk"
-                                                           type="checkbox">
-                                                    <b>LigeiroXL</b>
-                                                </label>
-                                            </div>
-
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="caravans-chk"
-                                                           type="checkbox">
-                                                    <b>Caravana</b>
-                                                </label>
-                                            </div>
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="busses-chk"
-                                                           type="checkbox">
-                                                    <b>Autocarro</b>
-                                                </label>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="container col-md-4">
-                                    <div class="row">
-                                        <div class="checkbox col-md-3">
-                                            <label>
-                                                <input id="persons-chk"
-                                                       type="checkbox">
-                                                <b>Pessoas</b>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="container col-md-offset-1
-                                                    col-md-3">
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="pedestrians-chk"
-                                                           type="checkbox">
-                                                    <b>Peões</b>
-                                                </label>
-                                            </div>
-
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="bicicles-chk"
-                                                           type="checkbox">
-                                                    <b>Bicicletas</b>
-                                                </label>
-                                            </div>
-
-                                            <div class="checkbox">
-                                                <label>
-                                                    <input id="passengers-chk"
-                                                           type="checkbox">
-                                                    <b>Passageiros</b>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <button class="btn btn-success" id="pie-btn"
+                                href="#" type="button"
+                                style="float: right;">
+                            <span class="glyphicon glyphicon-share-alt"
+                                  aria-hidden="true"></span>
+                            Gerar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-success">
+                <div class="panel-heading" role="tab" id="headingTwo">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button"
+                           data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseTwo" aria-expanded="false"
+                           aria-controls="collapseTwo">
+                            Cartesiano
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse collapse"
+                     role="tabpanel" aria-labelledby="headingTwo">
+                    <div class="panel-body">
+                        <h4 class="text-success">
+                            Entradas por Período:
+                        </h4>
+                        <div class="col-md-12 ">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="vehicles-chk"
+                                           autocomplete="off">
+                                    Viaturas
+                                </label>
                             </div>
-
+                        </div>
+                        <div class="col-md-12 ">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-success">
+                                    <input type="checkbox" id="bikes-chk"
+                                           autocomplete="off">
+                                    Motos
+                                </label>
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="lightduty-chk"
+                                           autocomplete="off">
+                                    Ligeiros
+                                </label>
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="lightdutyXL-chk"
+                                           autocomplete="off">
+                                    LigeirosXL
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-12 "
+                             style="padding-bottom: 5px;">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="caravans-chk"
+                                           autocomplete="off">
+                                    Caravanas
+                                </label>
+                                <label class="btn btn-success">
+                                    <input type="checkbox" id="busses-chk"
+                                           autocomplete="off">
+                                    Autocarros
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-12 ">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="persons-chk"
+                                           autocomplete="off">
+                                    Pessoas
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-12 "
+                             style="padding-bottom: 5px;">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="pedestrians-chk"
+                                           autocomplete="off">
+                                    Peões
+                                </label>
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="bicicles-chk"
+                                           autocomplete="off">
+                                    Bicicletas
+                                </label>
+                                <label class="btn btn-success">
+                                    <input type="checkbox"
+                                           id="passangers-chk"
+                                           autocomplete="off">
+                                    Passageiros
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
                             <button class="btn btn-success" id="line-btn"
                                     href="#" type="button"
                                     style="float: right;">
@@ -251,40 +184,97 @@
                                 Gerar
                             </button>
                         </div>
-
                     </div>
                 </div>
             </div>
+            <div class="panel panel-success">
+                <div class="panel-heading" role="tab" id="headingThree">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button"
+                           data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseThree" aria-expanded="false"
+                           aria-controls="collapseThree">
+                            Mapa
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseThree" class="panel-collapse collapse"
+                     role="tabpanel" aria-labelledby="headingThree">
+                    <div class="panel-body">
+                        <h4 class="text-success"> Visualizar no mapa: </h4>
+                        <div class="col-md-12 text-center"
+                             style="padding-bottom: 5px;">
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-success">
+                                <input type="radio" name="optionsRadios"
+                                       id="maps-world" autocomplete="off" >
+                                Mundo
+                            </label>
+                            <label class="btn btn-success">
+                                <input type="radio" name="optionsRadios"
+                                       id="pie-europe" autocomplete="off">
+                                Europa
+                            </label>
+                            <label class="btn btn-success">
+                                <input type="radio" name="optionsRadios"
+                                       id="maps-portugal"
+                                       autocomplete="off">
+                                Portugal
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="map-btn"
+                            href="#" type="button"
+                            style="float: right;">
+                        <span class="glyphicon glyphicon-share-alt"
+                              aria-hidden="true"></span>
+                        Gerar
+                    </button>
+                </div>
+            </div>
         </div>
-
-        <!-- warnings for the chart form -->
-        <div class="alert alert-danger" id="error-div"
-             role="alert" style="display: none">
-            <span class="glyphicon glyphicon-exclamation-sign"
-                  aria-hidden="true">
-            </span>
-            <b>Erro,</b>
-            <p id="error-message" style="display: inline">
-            </p>
         </div>
     </div>
 
+
+        </div>
+    </div>
+
+    <div class="col-md-8">
     <!-- chart renderer -->
     <div class="row">
-        <div class="col-md-3">
-                <h5><b>Resultados de:</b>
-                    {{ lower_date }} <b>a</b> {{ upper_date }}</h5>
-        </div>
-        <div class="col-md-2">
-        <h5><b>Porta:</b> {{ gate }}</h5>
-        </div>
-        <div class="col-md-2">
-        <h5><b>Período:</b> {{ period_str }}</h5>
-        </div>
-        <div class="col-md-12">
+        <div class="row">
+        <div class="col-md-12 text-center">
+            <h5>
+                &nbsp;&nbsp;
+                <b>Resultados de:</b>
+                {{ lower_date }} <b>a</b> {{ upper_date }}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <b>Porta:</b> {{ gate }}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <b>Período:</b> {{ period_str }}
+            </h5>
+        <!-- warnings for the chart form -->
+            <div class="alert alert-danger" id="error-div"
+                 role="alert" style="display: none">
+                <span class="glyphicon glyphicon-exclamation-sign"
+                      aria-hidden="true">
+                </span>
+                <b>Erro,</b>
+                <p id="error-message" style="display: inline">
+                </p>
+            </div>
             <div id="chart-container">
+                <div class="col-md-12 text-center">
+                    <br>
+                    <br>
+                    <img src="/static/img/logo.png" height="140px"
+                         alt="logo here"></img>
+                </div>
             </div>
         </div>
+        </div>
+    </div>
     </div>
     </div>
 </div>

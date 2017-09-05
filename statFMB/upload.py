@@ -138,8 +138,8 @@ def upload_file(new_file, user):
     print ("==> Errors found: {}".format(len(error_list)))
 
     #prevent the case when the user forgets to register the "Folha de Registo"
-    if (vehicles["total"] < (len(entrance_obj_list) + len(error_list))):
-        return "error",[],[],"Numero de veículos da folha de estatística é maior que o numero de veículos na folha de registo"
+    #if (vehicles["total"] <= (len(entrance_obj_list) + len(error_list))):
+    #    return "error",[],[],"Numero de veículos da folha de estatística é maior que o numero de veículos na folha de registo"
 
     #passengers
     passengers = 0
