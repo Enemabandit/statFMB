@@ -31,12 +31,20 @@ def get_file_path(filename, validated):
         path = None
     return path
 
+def get_relative_folder(filename):
+    full_path = get_file_path(filename,True).split("/")
+    validated_path = VALIDATED_FOLDER.split("/")
+    relative_folder_list = full_path[len(validated_path)-2:-1]
+
+    relative_path = os.path.join(*relative_folder_list) + "/"
+    return relative_path
+
+
 
 def delete_file(filename,validated):
     path = get_file_path(filename,validated)
     if path != None:
         os.remove(path)
-
 
 def file_exists(filename, validated):
     if validated:

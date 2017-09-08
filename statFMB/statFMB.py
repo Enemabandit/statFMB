@@ -1,6 +1,6 @@
 import os
-
-from flask import Flask, render_template, request, redirect, request, json
+from flask import Flask, render_template, request, redirect, request, json, \
+    send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, \
     RoleMixin, login_required, current_user, roles_required, roles_accepted, \
@@ -29,7 +29,8 @@ from .models import *
 from .db_create import create_tables
 from .upload import update_database, save_corrections
 from .utils import Alert
-from .files import  delete_file, copy_to_validated_folder
+from .files import  delete_file, copy_to_validated_folder, get_file_path, \
+    get_relative_folder
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
@@ -447,7 +448,7 @@ def validateReport():
 
             print("=> Report {} validated".format(report))
             description = "receita {} validada.".format(report)
-            log = Log(description = "validou receita {}".format(report),
+            log = Log(description = "Validou receita {}".format(report),
                       user = current_user)
             alert = Alert(category = "success",
                           title = "Sucesso",
@@ -471,20 +472,49 @@ def validateReport():
         return (str(e))
 
 
+@app.route('/downloadReport', methods=['GET','POST'])
+@roles_required('Administrador')
+def downloadReport():
+    try:
+        if request.method == 'POST':
+            report_id = request.form['report_id']
+            report = Report.get_report_by_id(report_id)
+
+            full_path = get_file_path(report.get_filename(),True)
+            filename = full_path.split("/")[-1]
+            directory = get_relative_folder(report.get_filename())
+
+            print("=> Report {} downloaded".format(report))
+            description = "Descarregou {}.".format(report)
+            log = Log(description = "descarregou {}".format(report),
+                      user = current_user)
+            db.session.add(log)
+            db.session.commit()
+
+        return send_file(filename_or_fp = directory+filename,
+                         as_attachment=True,
+                         attachment_filename=filename)
+
+    except Exception as e:
+        return (str(e))
+
 @app.route('/deleteReport', methods=['GET','POST'])
 @roles_required('Administrador')
 def deleteReport():
     try:
         if request.method == 'POST':
             report_id = request.form['report_id']
+            validated = request.form['validated']
+
             report = Report.get_report_by_id(report_id)
+            date = report.date
             entrances = Entrance.get_entrances_of_report(report)
             for entrance in entrances:
                 db.session.delete(entrance)
             db.session.delete(report)
 
             filename = report.get_filename()
-            delete_file(filename = filename,validated = False)
+            delete_file(filename = filename,validated = validated)
 
             print("=> report {} eliminated.".format(report))
             description = "receita {} Eliminada.".format(report)
@@ -495,15 +525,55 @@ def deleteReport():
                           description = description)
             db.session.add(log)
             db.session.commit()
+
+            if validated:
+                template = "listReports.html"
+                report_list = Report.get_report_list(date,date)
+                date = date
+                printable_reports = []
+                for report in report_list:
+                    printable_reports.append(report.to_dict())
+            else:
+                template = "validateReports"
+                report_list = Report.get_unvalidated_reports()
+                data = datetime.now()
+                printable_reports = []
+                for report in report_list:
+                    printable_reports.append(report.to_dict())
+
+            return render_template(template,
+                                   current_user = current_user.to_dict(),
+                                   date = date,
+                                   report_list = printable_reports,
+                                   alert_data = alert,
+            )
+
+    except Exception as e:
+        return (str(e))
+
+
+@app.route('/listReports', methods=['GET','POST'])
+@roles_required('Administrador')
+def listReports():
+    try:
+        if request.method == 'POST':
+            date = request.form['date']
+            report_list = Report.get_report_list(date,date)
+            printable_reports = []
+            for report in report_list:
+                printable_reports.append(report.to_dict())
+
+            if printable_reports == []:
+                alert = Alert(category = "warning",
+                              title = "Atenção",
+                              description= "nenhuma receita validada para esta data")
+            else:
+                alert = Alert(category = "none")
         else:
-            alert = Alert("none")
+            printable_reports = []
+            alert = Alert(category = "none")
 
-        report_list = Report.get_unvalidated_reports()
-        printable_reports = []
-        for report in report_list:
-            printable_reports.append(report.to_dict())
-
-        return render_template("validateReports.html",
+        return render_template("listReports.html",
                                current_user = current_user.to_dict(),
                                report_list = printable_reports,
                                alert_data = alert,
@@ -512,7 +582,7 @@ def deleteReport():
         return (str(e))
 
 
-@app.route('/validateReports', methods=['GET','POST'])
+@app.route('/validateReports', methods=['GET'])
 @roles_required('Administrador')
 def validateReports():
     try:

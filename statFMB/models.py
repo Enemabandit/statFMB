@@ -51,7 +51,8 @@ class Report(db.Model):
         return cls.query.filter(cls.id == report_id).one()
 
     @classmethod
-    def get_report_list(cls,lower_date, upper_date, gate, validated = True):
+    def get_report_list(cls,lower_date, upper_date, gate = "Todas",
+                        validated = True):
         report_query = cls.query.filter(cls.date >= lower_date,
                                         cls.date <= upper_date,
                                         cls.validated == validated)

@@ -198,9 +198,9 @@ def upload_file(new_file, user):
           .format(new_file.filename,report.id))
 
     if report_db_action == "valid":
-        description = "carregou {}".format(report)
+        description = "Carregou {}".format(report)
     elif report_db_action == "replace":
-        description = "carregou {} substituindo {}".format(report,report_old)
+        description = "Carregou {} substituindo {}".format(report,report_old)
 
     log = Log(description = description,user = user)
     db.session.add(log)
@@ -211,7 +211,6 @@ def upload_file(new_file, user):
 
 
 def save_corrections(saved_corrections):
-
     for report_id in saved_corrections:
         report = Report.get_report_by_id(report_id)
         for entry in saved_corrections[report_id]:
