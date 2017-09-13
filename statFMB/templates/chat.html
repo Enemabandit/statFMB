@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+{% from "macros.html" import FMB_logo%}
+
+{% block title %}Chat{% endblock %}
+{% block header %}{%endblock%}
+
+{% block head %}
+{{ super() }}
+<style>
+ div.msg-bbl{
+     background-color: #eee;
+     padding: 5px 10px;
+     border-radius: 10px;
+     color: #555;
+     margin-bottom: 5px;: 5px 10px;
+     border-radius: 10px;
+     margin-bottom: 5px;
+ }
+
+ div.msg-connect{
+     background-color: #afa;
+     padding: 5px 10px;
+     border-radius: 10px;
+     color: #555;
+     margin-bottom: 5px;: 5px 10px;
+     border-radius: 10px;
+     color: #555;
+     margin-bottom: 5px;
+ }
+
+ div.msg-disconnect{
+     background-color: #faa;
+     padding: 5px 10px;
+     border-radius: 10px;
+     color: #555;
+     margin-bottom: 5px;: 5px 10px;
+     border-radius: 10px;
+     color: #555;
+     margin-bottom: 5px;
+ }
+
+ div.msg-wrapper{
+     display: block;
+     width: 100%;
+     height: 68vh;
+     overflow: auto;
+     word-wrap: break-word;
+ }
+
+</style>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js">
+</script>
+{% endblock %}
+{% block navbar %}
+<div class="col-md-12">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed"
+                        data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand">
+                    <span><img src="/static/img/icon-nav.png"></img></span>
+                    Chat FMB (beta)
+                </a>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a>{{ current_user.name }}</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+{% endblock %}
+
+{% block body%}
+<br><br><br><br>
+<div class ="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1 col-xs-12">
+            <div class="msg-wrapper well">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <form class="form" action="" method="POST">
+            <input type="hidden" class="user form-control"
+                   value="{{ current_user.name }}"
+                   id="user" placeholder="Nome">
+            <div class="col-md-8 col-md-offset-1 col-xs-12">
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <b>{{ current_user.name }}</b>
+                        </span>
+
+                        <input type="text" class="message form-control"
+                               id="message" placeholder="Mensagem">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-xs-12">
+                <button type="submit" class="btn btn-success btn-block">
+                    <span class="glyphicon glyphicon-send"></span>
+                    Enviar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+ //this needs to be changed on production server
+ var socket = io.connect('http://127.0.0.1:5000/')
+
+ $(function(){
+ })
+ //broadcast connecting msg
+ socket.on('connect', function (){
+     socket.emit('chat-login',{
+         user: $('input.user').val(),
+         msg: "Entrou no chat.",
+     })
+ })
+
+ var form = $('form').on('submit', function (e){
+     e.preventDefault()
+     var user_name = $('input.user').val()
+     var message = $('input.message').val()
+     socket.emit('chat',{
+         user: user_name,
+         msg: message
+     })
+     $('input.message').val('').focus()
+ })
+
+ //capture msg
+ socket.on('chat-response', function(msg) {
+     if(typeof msg.user !== 'undefined') {
+         $('div.msg-wrapper').append('<div class="msg-bbl"><b>'+
+                                     msg.user+':</b> '+
+                                     msg.msg+'</div>')
+     }
+
+    $('div.msg-wrapper').scrollTop($('div.msg-wrapper')[0].scrollHeight)
+ })
+
+ //capture user login
+ socket.on('login-response',function(msg){
+     if( typeof msg.user !== 'undefined') {
+         $('div.msg-wrapper').append('<div class="msg-connect"><b>'+
+                                     msg.user+':</b> '+
+                                     msg.msg+'</div>')
+         $('div.msg-wrapper').scrollTop($('div.msg-wrapper')[0].scrollHeight)
+     }
+ })
+
+ //capture user logout
+ socket.on('logout-response',function(msg){
+     if( typeof msg.user !== 'undefined') {
+         $('div.msg-wrapper').append('<div class="msg-disconnect"><b>'+
+                                     msg.user+':</b> '+
+                                     msg.msg+'</div>')
+         $('div.msg-wrapper').scrollTop($('div.msg-wrapper')[0].scrollHeight)
+     }
+ })
+
+ //capture disconnect
+ $(window).on('unload', function(e){
+     socket.emit('chat-logout',{
+         user: $('input.user').val(),
+         msg: "Saiu."
+     })
+ });
+
+</script>
+{% endblock %}
