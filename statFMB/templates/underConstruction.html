@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "macros.html" import FMB_logo%}
 
 {% block title %}Em construção{% endblock %}
 {% block page_header%}Em Construção{% endblock %}
@@ -8,16 +9,9 @@
 <!-- Page Title -->
 <div class ="container">
     <div class="row">
-        <br><br><br><br><br>
+        <br>
+        {{ FMB_logo() }}
 
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 text-center" >
-                    <img src="/static/img/logo.png" height="200px"
-                         alt="logo here"></img>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 

@@ -9,9 +9,12 @@ from flask_security.utils import encrypt_password, verify_password
 from datetime import date, datetime
 from json import dumps
 
+from flask_socketio import SocketIO, emit
+
 
 #TODO: setup SSL
 #TODO: websockets to log user disconnection
+#TODO: websockets might bring some security vulns
 #TODO: create a way to save failed entrances and forget button
 #TODO: progress bar when uploading files(sockets)
 #TODO: config from objects
@@ -34,6 +37,7 @@ from .files import  delete_file, copy_to_validated_folder, get_file_path, \
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
+socketio = SocketIO(app)
 
 # Create users to test with
 # @app.before_first_request
@@ -71,6 +75,7 @@ security = Security(app, user_datastore)
 #    user_datastore.add_role_to_user('debug@fmb.pt', 'Administrador')
 #    db.session.commit()
 
+#VIEWS
 @app.route('/')
 def index():
     if not current_user.is_authenticated:
@@ -207,6 +212,12 @@ def changePassword():
 def underConstruction():
     return render_template("underConstruction.html",
                                current_user = current_user.to_dict())
+
+@app.route('/chat')
+@login_required
+def chat():
+    return render_template("chat.html",
+                           current_user = current_user.to_dict())
 
 
 @app.route('/addUser', methods=['GET','POST'])
@@ -498,13 +509,20 @@ def downloadReport():
     except Exception as e:
         return (str(e))
 
+
 @app.route('/deleteReport', methods=['GET','POST'])
 @roles_required('Administrador')
 def deleteReport():
     try:
         if request.method == 'POST':
             report_id = request.form['report_id']
-            validated = request.form['validated']
+            validated_txt = request.form['validated']
+            if validated_txt == "True":
+                validated = True
+            elif validated_txt == "False":
+                validated = False
+            else:
+                validated = None
 
             report = Report.get_report_by_id(report_id)
             date = report.date
@@ -526,17 +544,15 @@ def deleteReport():
             db.session.add(log)
             db.session.commit()
 
-            if validated:
+            if validated == True:
                 template = "listReports.html"
                 report_list = Report.get_report_list(date,date)
-                date = date
                 printable_reports = []
                 for report in report_list:
                     printable_reports.append(report.to_dict())
             else:
-                template = "validateReports"
+                template = "validateReports.html"
                 report_list = Report.get_unvalidated_reports()
-                data = datetime.now()
                 printable_reports = []
                 for report in report_list:
                     printable_reports.append(report.to_dict())
@@ -729,8 +745,8 @@ def upload():
                                                              user)
 
             vt_list = Vehicle_type.get_vehicle_types_list()
-            c_list = Country.get_countries_list()
-            m_list = Municipality.get_municipalities_list()
+            c_list = sorted(Country.get_countries_list())
+            m_list = sorted(Municipality.get_municipalities_list())
 
 
             return render_template("upload.html",
@@ -801,7 +817,18 @@ def upload_finalize():
         return(str(e))
 
 
-###TODO: IMPORTANT!!! THIS IS FOR DEVELOPMENT SERVER ONLY
-##       #DO NOT USE IN PRDUCTION SERVER
+##SOCKEIO interface
+@socketio.on('chat')
+def chat_event(json):
+    socketio.emit('chat-response',json)
+
+@socketio.on('chat-login')
+def chat_login(json):
+    socketio.emit('login-response',json)
+
+@socketio.on('chat-logout')
+def chat_logout(json):
+    socketio.emit('logout-response', json)
+
 if __name__ == "__main__":
-    app.run()
+    socketio.run(app)

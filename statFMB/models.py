@@ -520,6 +520,16 @@ class User(db.Model, UserMixin):
         description += "já existe na base de dados"
         return description
 
+    def first_and_last_name(self):
+        name_list = self.name.split(" ")
+        if len(name_list) > 1:
+            first = name_list[0]
+            last = name_list[-1]
+            name = "{} {}".format(first,last)
+        else:
+            name = "{}".format(name_list[0])
+
+        return name
 
     def to_dict(self):
         if self.get_role() == "Administrador":
@@ -529,7 +539,7 @@ class User(db.Model, UserMixin):
         return {'role': self.roles[0],
                 'email': self.email,
                 'state': self.active,
-                'name': self.name,
+                'name': self.first_and_last_name(),
                 'phone': self.phone,
                 'alias': self.alias,
                 'pending_reports': pending_reports,

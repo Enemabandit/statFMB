@@ -16,7 +16,7 @@ def save_unvalidated_file(new_file,filename):
 
 
 def get_file_path(filename, validated):
-    if validated:
+    if validated == True:
         folder = find_folder(filename)
     else:
         folder = UPLOAD_FOLDER
@@ -29,8 +29,12 @@ def get_file_path(filename, validated):
         path = "".join([folder,filename + ".xlsx"])
     else:
         path = None
+
+    print("OUTPUT from get_file_path: {}".format(path))
     return path
 
+
+#NOTE: using /
 def get_relative_folder(filename):
     full_path = get_file_path(filename,True).split("/")
     validated_path = VALIDATED_FOLDER.split("/")
@@ -40,14 +44,16 @@ def get_relative_folder(filename):
     return relative_path
 
 
-
 def delete_file(filename,validated):
     path = get_file_path(filename,validated)
     if path != None:
         os.remove(path)
+    else:
+        print("PATH IS NONE")
+
 
 def file_exists(filename, validated):
-    if validated:
+    if validated == True:
         folder = find_folder(filename)
     else:
         folder = UPLOAD_FOLDER
@@ -82,12 +88,16 @@ def copy_to_validated_folder(filename):
     return destination
 
 
+#NOTE: using /
 def find_folder(filename, create = False):
     date = get_date(filename)
     year_folder = os.path.join(VALIDATED_FOLDER,date.strftime("%Y"))
     month_folder = os.path.join(year_folder, date.strftime("%B"))
     day_folder = os.path.join(month_folder, date.strftime("%d"))
 
+    print ("Y: {}".format(year_folder))
+    print ("M: {}".format(month_folder))
+    print ("D: {}".format(day_folder))
     folder = None
     if os.path.isdir(year_folder):
         if os.path.isdir(month_folder):
@@ -109,6 +119,7 @@ def find_folder(filename, create = False):
             print("=> directory {} created".format(year_folder))
             folder = find_folder(filename, create = create)
 
+    print("OUTPUT of find_folder: {}".format(folder))
     return folder
 
 

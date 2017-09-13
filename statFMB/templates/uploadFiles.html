@@ -8,48 +8,20 @@
 <!-- Page Title -->
 <div class ="container">
     <div class="row">
-        <div class ="col-md-6">
-            <h4><b>Recomendações:</b></h4>
-            <p>
-                Reconhece os relatórios em vigor no ano 2017
-                no formato .xls ou .xlsx, No entanto é recomendado
-                utilizar o
-                <a href="FILE TO DOWNLOAD" download="Original.xlsx">
-                    exemplar dispoível aqui
-                </a>
-                .
-            </p>
-            <hr>
-            <p>
-                O nome do ficheiro tem de ter o seguinte formato:<br>
-                "PRIMEIRO_NOME ULTIMO_NOME DIA MÊS(extenso) PORTA"
-
-            </p>
-            <hr>
-            <p>
-                <b>atenção</b> no preenchimento dos campos:<br>
-                <ul>porta<br>
-                data<br>
-                hora de entrada<br>
-                hora de saida<br>
-                numero de bilhetes vendidos<br>
-                </ul>
-                para evitar erros no carregamento de ficheiros.
-            </p>
-            <hr>
-            <p>
-                Em caso de problema contactar: 
-                <a href="mailto:maia.coelho.dev@gmail.com?subject=Problemas%20com%20Upload">
-                    maia.coelho.dev@gmail.com
-                </a>
-            </p>
-        </div>
-        <div class ="col-md-6">
+        <div class ="col-md-4">
             <form method="POST" enctype="multipart/form-data"
                   action="{{ url_for('upload') }}">
+            <br>
+            <div class="form-group">
+                <label> Escolha os ficheiros</label>
+                <input type="file" name="files"
+                       accept=".xls,.xlsx"
+                       multiple
+                >
+            </div>
             {% if current_user.role == "Administrador" %}
             <div class="row">
-            <div class="col-md-5">
+            <div class="col-md-10">
                 <div class="form-group">
                     <label for="gate">Utilizador</label>
                     <select class="form-control" name="email"
@@ -67,20 +39,44 @@
             </div>
             <br>
             {% endif %}
-            <div class="form-group">
-                <div class="form-group">
-                    <input type="file" name="files"
-                           accept=".xls,.xlsx"
-                           multiple
-                    >
-                </div>
-                <button type="submit" value="upload"
-                        id="send"
-                        class="btn btn-success btn-lg">Carregar
-                </button>
-            </div>
-        </form>
+            <button type="submit" value="upload"
+                    id="send"
+                    class="btn btn-success btn-lg">Carregar
+            </button>
+            <br>
         </div>
+        <div class ="col-md-8">
+            <h4><b>Recomendações:</b></h4>
+            <p>
+                Reconhece os relatórios em vigor no ano 2017
+                no formato .xls ou .xlsx, <b>No entanto é recomendado</b>
+                utilizar o
+                <a href="static/resources/ORIGINAL.xlsx"
+                   download="Original.xlsx">
+                    exemplar aqui disponível
+                </a>
+                .
+            </p>
+            <hr>
+            <p>
+                <b>Atenção</b> no preenchimento dos campos:<br>
+                <ul>porta<br>
+                data<br>
+                hora de entrada<br>
+                hora de saida<br>
+                numero de bilhetes vendidos<br>
+                </ul>
+                para evitar erros no carregamento de ficheiros.
+            </p>
+            <hr>
+            <p>
+                Em caso de problema contactar: 
+                <a href="mailto:maia.coelho.dev@gmail.com?subject=Problemas%20com%20Upload">
+                    maia.coelho.dev@gmail.com
+                </a>
+            </p>
+        </div>
+        </form>
         </div>
     </div>
 </div>
