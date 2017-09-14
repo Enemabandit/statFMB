@@ -3,10 +3,8 @@ from .statFMB import APP_ROOT
 from openpyxl import Workbook
 from datetime import date
 
-#PAY ATENTION IF PRODUCTION SERVER IS WINDOWS
-#             find_folder might need atention also
-UPLOAD_FOLDER = os.path.join(APP_ROOT,"tmp/")
-VALIDATED_FOLDER = os.path.join(APP_ROOT,"validated/")
+UPLOAD_FOLDER = os.path.join(APP_ROOT,"tmp"+os.sep)
+VALIDATED_FOLDER = os.path.join(APP_ROOT,"validated"+os.sep)
 
 def save_unvalidated_file(new_file,filename):
     destination = "".join([UPLOAD_FOLDER,filename])
@@ -21,26 +19,28 @@ def get_file_path(filename, validated):
     else:
         folder = UPLOAD_FOLDER
 
-    if file_exists(filename,validated):
-        path = "".join([folder,filename])
-    elif file_exists(filename + ".xls", validated):
-        path = "".join([folder,filename + ".xls"])
-    elif file_exists(filename + ".xlsx",validated):
-        path = "".join([folder,filename + ".xlsx"])
-    else:
-        path = None
 
-    print("OUTPUT from get_file_path: {}".format(path))
+    ext = get_ext(filename,validated)
+    path = "".join([folder,filename,ext])
     return path
 
+def get_ext(filename,validated):
+    if file_exists(filename,validated):
+        ext = ""
+    elif file_exists(filename + ".xls", validated):
+        ext = ".xls"
+    elif file_exists(filename + ".xlsx",validated):
+        ext = ".xlsx"
+    else:
+        ext = None
+    return ext
 
-#NOTE: using /
 def get_relative_folder(filename):
-    full_path = get_file_path(filename,True).split("/")
-    validated_path = VALIDATED_FOLDER.split("/")
+    full_path = get_file_path(filename,True).split(os.sep)
+    validated_path = VALIDATED_FOLDER.split(os.sep)
     relative_folder_list = full_path[len(validated_path)-2:-1]
 
-    relative_path = os.path.join(*relative_folder_list) + "/"
+    relative_path = os.path.join(*relative_folder_list) + os.sep
     return relative_path
 
 
@@ -67,42 +67,31 @@ def file_exists(filename, validated):
 
 def copy_to_validated_folder(filename):
     unvalidated_path = get_file_path(filename = filename,validated = False)
-    print(unvalidated_path)
     destination_folder = find_folder(filename = filename, create = True)
-    print(destination_folder)
     extension = unvalidated_path[-4:]
     if extension == "xlsx":
         extension = ".xlsx"
-    print(extension)
-
     destination = destination_folder + filename + extension
-
-    print(destination)
 
     if unvalidated_path and destination_folder:
         os.rename(unvalidated_path,destination)
         print("=> file {} transfered to validated.".format(filename+extension))
     else:
         return None
-
     return destination
 
 
-#NOTE: using /
 def find_folder(filename, create = False):
     date = get_date(filename)
     year_folder = os.path.join(VALIDATED_FOLDER,date.strftime("%Y"))
     month_folder = os.path.join(year_folder, date.strftime("%B"))
     day_folder = os.path.join(month_folder, date.strftime("%d"))
 
-    print ("Y: {}".format(year_folder))
-    print ("M: {}".format(month_folder))
-    print ("D: {}".format(day_folder))
     folder = None
     if os.path.isdir(year_folder):
         if os.path.isdir(month_folder):
             if os.path.isdir(day_folder):
-                folder = day_folder + "/"
+                folder = day_folder + os.sep
             else:
                 if create:
                     os.mkdir(day_folder)
@@ -119,7 +108,6 @@ def find_folder(filename, create = False):
             print("=> directory {} created".format(year_folder))
             folder = find_folder(filename, create = create)
 
-    print("OUTPUT of find_folder: {}".format(folder))
     return folder
 
 

@@ -121,11 +121,17 @@
  //this needs to be changed on production server
  var socket = io.connect('http://127.0.0.1:5000/')
 
- $(function(){
- })
  //broadcast connecting msg
  socket.on('connect', function (){
      socket.emit('chat-login',{
+         user: $('input.user').val(),
+         msg: "Entrou no chat.",
+     })
+ })
+
+ //broadcast disconnect
+ socket.on('disconnect',function() {
+     socket.emit('chat-logout',{
          user: $('input.user').val(),
          msg: "Entrou no chat.",
      })

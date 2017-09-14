@@ -116,6 +116,9 @@ class Report(db.Model):
                     free_interval_list.extend(interval_updated)
         return free_interval_list
 
+    def is_validated(self):
+        return self.validated
+
     def get_filename(self,file_ext = None):
         if file_ext != None:
             if file_ext == ".xls":
@@ -145,6 +148,11 @@ class Report(db.Model):
                 "user": self.user.name,
                 "email": self.user.email,
                 "gate": self.gate.gate,
+                "bikes": self.bikes,
+                "lightduty": self.lightduty,
+                "lightdutyXL": self.lightdutyXL,
+                "caravans": self.caravans,
+                "busses": self.busses,
                 "total": total,
                 }
 

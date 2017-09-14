@@ -12,5 +12,6 @@ setup(
         'xlrd',
         'eventlet',
         'flask-socketio',
+        'weasyprint',
     ],
 )

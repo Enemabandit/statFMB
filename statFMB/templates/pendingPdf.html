@@ -1,0 +1,46 @@
+{% from "macros.html" import FMB_logo %}
+<!DOCTYPE html>
+<html lang="en" style="position: relative; min-height: 100%;">
+    <head>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/static/js/jquery-3.2.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <br><br>
+        <h1>Receitas Pendentes <small>{{ date }}</small></h1>
+        <hr>
+        <table style="width:100%">
+        {% for report in report_list %}
+            <tr>
+                <h4><b>Receita:</b>
+                    {{ report.gate }} -
+                    {{ report.date }} -
+                    {{ report.start_time }} ás {{ report.end_time }} -
+                    {{ report.user }}
+                </h4>
+                <table style="width:100%">
+                    <tr>
+                        <th>Motos</th>
+                        <th>Ligeiros</th>
+                        <th>Ligeiros XL</th>
+                        <th>Caravanas</th>
+                        <th>Autocarros</th>
+                        <th>Total</th>
+                    </tr>
+                    <tr>
+                        <th>{{ report.bikes }}</th>
+                        <th>{{ report.lightduty }}</th>
+                        <th>{{ report.lightdutyXL }}</th>
+                        <th>{{ report.caravans }}</th>
+                        <th>{{ report.busses }}</th>
+                        <th>{{ report.total }}€</th>
+                    </tr>
+
+                </table>
+            </tr>
+        <hr>
+        {% endfor %}
+        </table>
+    </body>
+</html>

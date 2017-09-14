@@ -10,8 +10,23 @@
 <div class ="container">
     {% if report_list != [] %}
     <div class="row">
+        <div class="col-md-12">
+            <form method="POST">
+                <button class="btn btn-success" disabled>
+                    <span class="glyphicon glyphicon-ok"> </span>
+                    Validar Todos
+                </button>
+                <button class="btn btn-success"
+                        formaction="{{ url_for('pendingPdf') }}" >
+                    <span class="glyphicon glyphicon-print"> </span>
+                    Imprimir
+                </button>
+            </form>
+        </div>
+    </div>
+        <br>
+    <div class="row">
         <form method="POST">
-            <input type="hidden" name="validated" value="False">
         <div class="panel panel-success">
             <div class="panel-heading">
                 <div class="row">
@@ -47,41 +62,39 @@
                     <div class="col-md-3">
                         <h5>{{ report.user }}</h5>
                     </div>
-                    <div class="col-md-4">
-                        <div class="col-md-4">
-                            <button class="btn btn-success"
-                                    type="submit"
-                                    formaction="{{url_for('validateReport')}}"
-                                    name="report_id" value="{{ report.id }}">
-                                Validar
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-danger"
-                                    type="submit"
-                                    formaction="{{ url_for('deleteReport')}}"
-                                    name="report_id" value="{{ report.id }}">
-                                Eliminar
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <!-- TODO: don't forget to rework this body
-                               not working-->
-                            <button class="btn btn-success"
-                                    formaction="mailto:{{ report.email }}?subject=Retificação%20de%20Receita&body=aaaa%0Aaaaa"
-                                    >
-
-                                Email
-                            </button>
-                        </div>
+                    <div class="col-md-4 text-center">
+                        <button class="btn btn-success"
+                                type="submit"
+                                formaction="{{url_for('validateReport')}}"
+                                name="report_id" value="{{ report.id }}">
+                            <span class="glyphicon glyphicon-ok"> </span>
+                        </button>
+                        <button class="btn btn-danger"
+                                type="submit"
+                                formaction="{{ url_for('deleteReport')}}"
+                                name="report_id" value="{{ report.id }}">
+                            <span class="glyphicon glyphicon-remove"> </span>
+                        </button>
+                        <button class="btn btn-success"
+                                type="submit"
+                                formaction="{{url_for('downloadReport')}}"
+                                name="report_id" value="{{ report.id }}">
+                            <span class="glyphicon glyphicon-floppy-disk">
+                            </span>
+                        </button>
+                        <!-- TODO: don't forget to rework this body
+                             not working-->
+                        <button class="btn btn-success"
+                                formaction="mailto:{{ report.email }}?subject=Retificação%20de%20Receita&body=aaaa%0Aaaaa"
+                        >
+                            <span class="glyphicon glyphicon-envelope"> </span>
+                        </button>
                     </div>
                 </div>
                 <br>
                 {% endfor %}
             </div>
         </div>
-        <button class="btn btn-success pull-right"
-                disabled>Validar Todos</button>
         </form>
     </div>
     {% else %}

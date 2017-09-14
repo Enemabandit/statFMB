@@ -28,7 +28,6 @@
     {% if report_list != [] %}
     <div class="row">
         <form method="POST">
-            <input type="hidden" name="validated" value="True">
         <div class="panel panel-success">
             <div class="panel-heading">
                 <div class="row">
@@ -87,8 +86,7 @@
                             <button class="btn btn-success"
                                     formaction="mailto:{{ report.email }}?subject=Retificação%20de%20Receita&body=aaaa%0Aaaaa"
                                     >
-
-                                Email
+                                <span class="glyphicon glyphicon-send"></span>
                             </button>
                         </div>
                     </div>
@@ -97,8 +95,6 @@
                 {% endfor %}
             </div>
         </div>
-        <button class="btn btn-success pull-right"
-                disabled>Validar Todos</button>
         </form>
     </div>
     {% else %}

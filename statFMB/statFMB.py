@@ -8,18 +8,20 @@ from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, \
 from flask_security.utils import encrypt_password, verify_password
 from datetime import date, datetime
 from json import dumps
-
 from flask_socketio import SocketIO, emit
-
+from flask_weasyprint import HTML, render_pdf
 
 #TODO: setup SSL
 #TODO: websockets to log user disconnection
-#TODO: websockets might bring some security vulns
+#TODO: websockets might bring some security vulns (look into it)
 #TODO: create a way to save failed entrances and forget button
 #TODO: progress bar when uploading files(sockets)
 #TODO: config from objects
 #TODO: redo how save button in finalizeUploads work when there is only file
 #      and it errors
+
+#TODO: Download option from validateReports
+#TODO: pdf of unvalidated reports
 
 app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
@@ -32,8 +34,7 @@ from .models import *
 from .db_create import create_tables
 from .upload import update_database, save_corrections
 from .utils import Alert
-from .files import  delete_file, copy_to_validated_folder, get_file_path, \
-    get_relative_folder
+from .files import  delete_file, copy_to_validated_folder, get_file_path
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
@@ -213,6 +214,7 @@ def underConstruction():
     return render_template("underConstruction.html",
                                current_user = current_user.to_dict())
 
+
 @app.route('/chat')
 @login_required
 def chat():
@@ -276,6 +278,27 @@ def addUser():
                                alert_data = Alert(),
         )
 
+
+#NOTE:THIS IS TESTING
+@app.route('/pendingPdf', methods=['GET','POST'])
+@roles_required('Administrador')
+def pendingPdf():
+    report_list = Report.get_unvalidated_reports()
+    printable_reports = []
+    for report in report_list:
+        printable_reports.append(report.to_dict())
+
+    html = render_template('pendingPdf.html',
+                           report_list = printable_reports,
+                           date = date.today(),
+    )
+
+    filename = "Receitas Pendentes {}.pdf".format(
+        date.today().strftime("%d/%m/%Y"))
+
+    return render_pdf(HTML(string=html),
+                      download_filename = filename,
+    )
 
 @app.route('/editUser', methods=['GET','POST'])
 @roles_required('Administrador')
@@ -490,10 +513,10 @@ def downloadReport():
         if request.method == 'POST':
             report_id = request.form['report_id']
             report = Report.get_report_by_id(report_id)
+            validated = report.is_validated()
 
-            full_path = get_file_path(report.get_filename(),True)
-            filename = full_path.split("/")[-1]
-            directory = get_relative_folder(report.get_filename())
+            full_path = get_file_path(report.get_filename(),validated)
+            filename = full_path.split(os.sep)[-1]
 
             print("=> Report {} downloaded".format(report))
             description = "Descarregou {}.".format(report)
@@ -502,7 +525,7 @@ def downloadReport():
             db.session.add(log)
             db.session.commit()
 
-        return send_file(filename_or_fp = directory+filename,
+        return send_file(filename_or_fp = full_path,
                          as_attachment=True,
                          attachment_filename=filename)
 
@@ -516,16 +539,10 @@ def deleteReport():
     try:
         if request.method == 'POST':
             report_id = request.form['report_id']
-            validated_txt = request.form['validated']
-            if validated_txt == "True":
-                validated = True
-            elif validated_txt == "False":
-                validated = False
-            else:
-                validated = None
-
             report = Report.get_report_by_id(report_id)
+            validated = report.is_validated()
             date = report.date
+
             entrances = Entrance.get_entrances_of_report(report)
             for entrance in entrances:
                 db.session.delete(entrance)
@@ -822,13 +839,16 @@ def upload_finalize():
 def chat_event(json):
     socketio.emit('chat-response',json)
 
+
 @socketio.on('chat-login')
 def chat_login(json):
     socketio.emit('login-response',json)
 
+
 @socketio.on('chat-logout')
 def chat_logout(json):
     socketio.emit('logout-response', json)
+
 
 if __name__ == "__main__":
     socketio.run(app)
