@@ -279,7 +279,6 @@ def addUser():
         )
 
 
-#NOTE:THIS IS TESTING
 @app.route('/pendingPdf', methods=['GET','POST'])
 @roles_required('Administrador')
 def pendingPdf():
@@ -297,8 +296,10 @@ def pendingPdf():
         date.today().strftime("%d/%m/%Y"))
 
     return render_pdf(HTML(string=html),
+                      #NOTE: comment this to open the pdf in a new tab
                       download_filename = filename,
     )
+
 
 @app.route('/editUser', methods=['GET','POST'])
 @roles_required('Administrador')
@@ -780,6 +781,15 @@ def upload():
         )
     except Exception as e:
         return(str(e))
+
+
+@app.route('/schedule',methods=['GET','POST'])
+@roles_accepted('Administrador','Portageiro')
+def schedule():
+    return render_template("schedule.html",
+                           current_user = current_user.to_dict(),
+                           user_list = User.get_users_by_role("Portageiro"),
+    )
 
 
 @app.route('/upload/finalize',methods=['GET','POST'])

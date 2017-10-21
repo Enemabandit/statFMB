@@ -20,9 +20,9 @@
     <!-- search_form -->
     {{ search_form("charts",lower_date,upper_date,date_warning) }}
     {% if search_made %}
-    <!-- chart_form -->
     <div class ="row">
     <div class="col-md-4">
+
 <div class="panel panel-default">
     <div class="panel-heading">
         <h4 class="text-success text-center">
@@ -50,17 +50,17 @@
                         <div class="col-md-12 text-center"
                              style="padding-bottom: 5px;">
                         <div class="btn-group" data-toggle="buttons">
-                            <label class="btn btn-success">
+                            <label class="btn btn-default">
                                 <input type="radio" name="optionsRadios"
                                        id="pie-gates" autocomplete="off" >
                                 Portas
                             </label>
-                            <label class="btn btn-success">
+                            <label class="btn btn-default">
                                 <input type="radio" name="optionsRadios"
                                        id="pie-countries" autocomplete="off">
                                 Países
                             </label>
-                            <label class="btn btn-success">
+                            <label class="btn btn-default">
                                 <input type="radio" name="optionsRadios"
                                        id="pie-municipalities"
                                        autocomplete="off">
@@ -95,90 +95,115 @@
                         <h4 class="text-success">
                             Entradas por Período:
                         </h4>
-                        <div class="col-md-12 ">
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="vehicles-chk"
-                                           autocomplete="off">
+
+
+                        <div class="col-md-4">
+                            <div class="button-group">
+                                <button type="button"
+                                        class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">
                                     Viaturas
-                                </label>
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-chk">
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option1" tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id ="vehicles-chk"/>
+                                            &nbsp;Viaturas </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option2"
+                                           tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id="bikes-chk"/>
+                                            &nbsp;Motos </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option3" tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id="lightduty-chk"/>
+                                            &nbsp;Ligeiros </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option4" tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id ="lightdutyXL-chk"/>
+                                            &nbsp;Ligeiros XL </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option5"
+                                           tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id="caravans-chk"/>
+                                            &nbsp;Caravanas </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option6"
+                                           tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id ="busses-chk"/>
+                                            &nbsp;Autocarros </a>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="col-md-12 ">
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-success">
-                                    <input type="checkbox" id="bikes-chk"
-                                           autocomplete="off">
-                                    Motos
-                                </label>
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="lightduty-chk"
-                                           autocomplete="off">
-                                    Ligeiros
-                                </label>
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="lightdutyXL-chk"
-                                           autocomplete="off">
-                                    LigeirosXL
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-12 "
-                             style="padding-bottom: 5px;">
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="caravans-chk"
-                                           autocomplete="off">
-                                    Caravanas
-                                </label>
-                                <label class="btn btn-success">
-                                    <input type="checkbox" id="busses-chk"
-                                           autocomplete="off">
-                                    Autocarros
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-12 ">
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="persons-chk"
-                                           autocomplete="off">
+
+
+
+                        <div class="col-md-4">
+                            <div class="button-group">
+                                <button type="button"
+                                        class="btn btn-default dropdown-toggle"
+                                        data-toggle="dropdown">
                                     Pessoas
-                                </label>
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-chk">
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option1" tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id ="persons-chk"/>
+                                            &nbsp;Pessoas </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option2"
+                                           tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id="pedestrians-chk"/>
+                                            &nbsp;Peões </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option3" tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id="bicicles-chk"/>
+                                            &nbsp;Bicicletas </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="small"
+                                           data-value="option4" tabIndex="-1">
+                                            <input type="checkbox"
+                                                   id ="passengers-chk"/>
+                                            &nbsp;Passageiros </a>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="col-md-12 "
-                             style="padding-bottom: 5px;">
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="pedestrians-chk"
-                                           autocomplete="off">
-                                    Peões
-                                </label>
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="bicicles-chk"
-                                           autocomplete="off">
-                                    Bicicletas
-                                </label>
-                                <label class="btn btn-success">
-                                    <input type="checkbox"
-                                           id="passangers-chk"
-                                           autocomplete="off">
-                                    Passageiros
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
+
+
+                        <div class="col-md-4">
                             <button class="btn btn-success" id="line-btn"
                                     href="#" type="button"
-                                    style="float: right;">
+                                    >
                                 <span class="glyphicon glyphicon-share-alt"
                                       aria-hidden="true"></span>
                                 Gerar
@@ -205,17 +230,17 @@
                         <div class="col-md-12 text-center"
                              style="padding-bottom: 5px;">
                         <div class="btn-group" data-toggle="buttons">
-                            <label class="btn btn-success">
+                            <label class="btn btn-default">
                                 <input type="radio" name="optionsRadios"
                                        id="maps-world" autocomplete="off" >
                                 Mundo
                             </label>
-                            <label class="btn btn-success">
+                            <label class="btn btn-default">
                                 <input type="radio" name="optionsRadios"
-                                       id="pie-europe" autocomplete="off">
+                                       id="maps-europe" autocomplete="off">
                                 Europa
                             </label>
-                            <label class="btn btn-success">
+                            <label class="btn btn-default">
                                 <input type="radio" name="optionsRadios"
                                        id="maps-portugal"
                                        autocomplete="off">
@@ -288,7 +313,6 @@
 
 
 <script>
-    //TODO: scroll to chart-container div
     $(document).ready(function() {
         var search_JSON = {{ search|tojson|safe }}
         var search = JSON.parse(search_JSON)
@@ -311,6 +335,26 @@
             generateLine(search);
         });
     });
+
+    //dropdown menus with checkboxes
+    var options = [];
+    $( '.dropdown-menu-chk a' ).on( 'click', function( event ) {
+    var $target = $( event.currentTarget ),
+       val = $target.attr( 'data-value' ),
+       $inp = $target.find( 'input' ),
+       idx;
+
+   if ( ( idx = options.indexOf( val ) ) > -1 ) {
+      options.splice( idx, 1 );
+      setTimeout( function() { $inp.prop( 'checked', false ) }, 0);
+   } else {
+      options.push( val );
+      setTimeout( function() { $inp.prop( 'checked', true ) }, 0);
+   }
+
+   $( event.target ).blur();
+   return false;
+});
 </script>
 
 {% endblock %}

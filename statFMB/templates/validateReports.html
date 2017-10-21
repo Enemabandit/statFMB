@@ -79,13 +79,13 @@
                                 type="submit"
                                 formaction="{{url_for('downloadReport')}}"
                                 name="report_id" value="{{ report.id }}">
-                            <span class="glyphicon glyphicon-floppy-disk">
+                            <span class="glyphicon glyphicon-download-alt">
                             </span>
                         </button>
                         <!-- TODO: don't forget to rework this body
                              not working-->
                         <button class="btn btn-success"
-                                formaction="mailto:{{ report.email }}?subject=Retificação%20de%20Receita&body=aaaa%0Aaaaa"
+                                formaction="mailto:{{ report.email }}?subject=Retificação%20de%20Receita&body=Por%20favor%20retifique%20a%20receita%20de%20{{ report.date }}%2C%20e%20volte%20a%20carregar%20no%20portal"
                         >
                             <span class="glyphicon glyphicon-envelope"> </span>
                         </button>

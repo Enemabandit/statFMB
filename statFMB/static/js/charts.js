@@ -24,13 +24,13 @@ function generateMap(){
   var chartContainer = document.getElementById("chart-container");
 
   if (document.getElementById("maps-world").checked){
-    $("#chart-container").text("Not Implemented yet!");
+    $("#chart-container").html(" <div class='alert alert-danger' role='alert'>Ainda não foi implementado!</div>");
     return 0;
   } else if (document.getElementById("maps-europe").checked){
-    $("#chart-container").text("Not Implemented yet!");
+    $("#chart-container").html(" <div class='alert alert-danger' role='alert'>Ainda não foi implementado!</div>");
     return 0;
   } else if (document.getElementById("maps-portugal").checked){
-    $("#chart-container").text("Not Implemented yet!");
+    $("#chart-container").html(" <div class='alert alert-danger' role='alert'>Ainda não foi implementado!</div>");
     return 0;
   } else {
     showError("noChart");

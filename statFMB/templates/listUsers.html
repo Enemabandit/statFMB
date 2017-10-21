@@ -65,34 +65,32 @@
                         </h5>
                         {% endif %}
                     </div>
-                    <div class="col-md-3">
-                        <div class="col-md-4">
+                    <div class="col-md-3 text-center">
                             <button class="btn btn-danger"
                                     type="submit"
                                     formaction="{{ url_for('toggleUserActivation') }}"
                                     name="toggle" value="{{ user.email }}">
                             {% if user.active %}
+                                <span class="glyphicon glyphicon-eye-close">
+                                </span>
                                 Desativar
                             {% else %}
+                                <span class="glyphicon glyphicon-eye-open">
+                                </span>
                                 Ativar
                             {% endif %}
                             </button>
-                        </div>
-                        <div class="col-md-4">
                             <button class="btn btn-success"
                                     type="submit"
                                     formaction="{{ url_for('editUser') }}"
                                     name="email_to_edit"
                                     value="{{ user.email }}">
-                                Editar
+                                <span class="glyphicon glyphicon-edit"></span>
                             </button>
-                        </div>
-                        <div class="col-md-4">
                             <button class="btn btn-success"
                             formaction="mailto:{{ user.email }}">
-                                Email
+                                <span class="glyphicon glyphicon-send"></span>
                             </button>
-                        </div>
                     </div>
                 <input type="hidden" name="editing"
                        value="False">

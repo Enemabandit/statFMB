@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% from "macros.html" import FMB_logo%}
+
+{% block title %}Calendário{% endblock %}
+{% block page_header%}Calendário{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel='stylesheet' href='fullcalendar/fullcalendar.css' />
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.6.0/fullcalendar.min.js '></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.6.0/fullcalendar.min.css'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.6.0/fullcalendar.print.css '></script>
+{% endblock %}
+
+{% block body%}
+
+<!-- Page Title -->
+<div class ="container">
+    <div class="row">
+<div id='calendar'></div>
+
+
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    // page is now ready, initialize the calendar...
+
+    $('#calendar').fullCalendar({
+        // put your options and callbacks here
+    })
+
+});
+</script>
+
+{% endblock %}
