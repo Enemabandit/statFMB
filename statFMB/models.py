@@ -5,7 +5,7 @@ from datetime import date, datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from .statFMB import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
+from .views import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
 from .utils import is_within_interval
 
 ##Report related models

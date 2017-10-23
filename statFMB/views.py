@@ -11,6 +11,7 @@ from json import dumps
 from flask_socketio import SocketIO, emit
 from flask_weasyprint import HTML, render_pdf
 
+#TODO: IMPORTANT!!! reorganize the import system
 #TODO: setup SSL
 #TODO: websockets to log user disconnection
 #TODO: websockets might bring some security vulns (look into it)
@@ -20,21 +21,18 @@ from flask_weasyprint import HTML, render_pdf
 #TODO: redo how save button in finalizeUploads work when there is only file
 #      and it errors
 
-#TODO: Download option from validateReports
-#TODO: pdf of unvalidated reports
-
-app = Flask(__name__)
+app = Flask('statFMB')
 app.config.from_pyfile('config.cfg')
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
-from .models import *
-from .db_create import create_tables
-from .upload import update_database, save_corrections
-from .utils import Alert
-from .files import  delete_file, copy_to_validated_folder, get_file_path
+from statFMB.models import *
+from statFMB.db_create import create_tables
+from statFMB.upload import update_database, save_corrections
+from statFMB.utils import Alert
+from statFMB.files import  delete_file, copy_to_validated_folder, get_file_path
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
