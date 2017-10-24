@@ -20,6 +20,7 @@ from flask_weasyprint import HTML, render_pdf
 #TODO: config from objects
 #TODO: redo how save button in finalizeUploads work when there is only file
 #      and it errors
+#TODO: change the way the database is initialized
 
 app = Flask('statFMB')
 app.config.from_pyfile('config.cfg')
