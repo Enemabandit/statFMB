@@ -23,6 +23,7 @@ setup(
         'xlrd',
         'eventlet',
         'flask-socketio',
+        'flask-weasyprint',
         'weasyprint',
         'bcrypt',
     ],

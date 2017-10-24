@@ -1,0 +1,13 @@
+
+1) create the virtual env
+2) install the package
+3) copy the config file (email maia.coelho.dev@gmail.com for details)
+4) create the tmp and validated directories under the package directory
+     (use links in order to change the default behaviour)
+5) by default this hosts locally at 127.0.0.1:5000, see run.py and
+      change if needed
+6) if not hosting on localhost the package needs to run as sudo in
+       order to use port 80 or 433
+
+        NOTE: IMPORTANT!! this is a testing deployment,
+           be sure to change the default credentials
