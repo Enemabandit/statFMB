@@ -5,10 +5,10 @@ from openpyxl import load_workbook, worksheet
 from openpyxl.workbook import Workbook
 from openpyxl.reader.excel import load_workbook, InvalidFileException
 
-from statFMB.views import db, current_user, app
-from statFMB.models import *
-from statFMB.utils import clear_str, represents_int
-from statFMB.files import save_unvalidated_file, delete_file
+from views import db, Report, current_user, app
+from models import *
+from utils import clear_str, represents_int
+from files import save_unvalidated_file, delete_file
 
 #TODO: create a pending entrances, mainly for email script but also
 #      so we don't loose invalid entrances

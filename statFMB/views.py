@@ -28,11 +28,11 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 db = SQLAlchemy(app)
 
 #models.py imports db, needs to be imported after db creation
-from statFMB.models import *
-from statFMB.db_create import create_tables
-from statFMB.upload import update_database, save_corrections
-from statFMB.utils import Alert
-from statFMB.files import  delete_file, copy_to_validated_folder, get_file_path
+from models import *
+from db_create import create_tables
+from upload import update_database, save_corrections
+from utils import Alert
+from files import  delete_file, copy_to_validated_folder, get_file_path
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
@@ -858,5 +858,3 @@ def chat_logout(json):
     socketio.emit('logout-response', json)
 
 
-if __name__ == "__main__":
-    socketio.run(app)

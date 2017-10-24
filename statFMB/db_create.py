@@ -1,5 +1,5 @@
-from statFMB.views import db
-from statFMB.models import *
+from views import db
+from models import *
 import csv
 from collections import defaultdict
 from operator import itemgetter
