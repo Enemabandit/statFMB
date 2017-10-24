@@ -1,5 +1,6 @@
-graft instance/
 graft statFMB/static
 graft statFMB/templates
-include models.py
-include statFMB.py
+prune statFMB/tmp
+prune statFMB/validated
+include statFMB/config.cfg
+include README.rst

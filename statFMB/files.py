@@ -1,5 +1,5 @@
 import os
-from views import APP_ROOT
+from statFMB.views import APP_ROOT
 from openpyxl import Workbook
 from datetime import date
 

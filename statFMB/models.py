@@ -5,8 +5,8 @@ from datetime import date, datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from views import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
-from utils import is_within_interval
+from statFMB.views import db, RoleMixin, UserMixin, SQLAlchemyUserDatastore
+from statFMB.utils import is_within_interval
 
 ##Report related models
 class Report(db.Model):

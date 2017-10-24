@@ -1,1 +1,1 @@
-from views import app
+from statFMB.views import app
