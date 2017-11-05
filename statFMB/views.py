@@ -11,7 +11,6 @@ from json import dumps
 from flask_socketio import SocketIO, emit
 from flask_weasyprint import HTML, render_pdf
 
-#TODO: IMPORTANT!!! reorganize the import system
 #TODO: setup SSL
 #TODO: websockets to log user disconnection
 #TODO: websockets might bring some security vulns (look into it)
@@ -20,7 +19,6 @@ from flask_weasyprint import HTML, render_pdf
 #TODO: config from objects
 #TODO: redo how save button in finalizeUploads work when there is only file
 #      and it errors
-#TODO: change the way the database is initialized
 
 app = Flask('statFMB')
 app.config.from_pyfile('config.cfg')
@@ -33,48 +31,12 @@ from statFMB.models import *
 from statFMB.db_create import create_tables
 from statFMB.upload import update_database, save_corrections
 from statFMB.utils import Alert
-from statFMB.files import  delete_file, copy_to_validated_folder, get_file_path
+from statFMB.files import delete_file, copy_to_validated_folder, get_file_path
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 socketio = SocketIO(app)
 socketio.logged_users = []
-
-# Create users to test with
-# @app.before_first_request
-# def create_user():
-#    create_tables()
-#    user_datastore.create_user(email='Administrador@fmb.pt',
-#                               password='1234',
-#                               name='Admin Adminus',
-#                               phone= 919191911,
-#                               alias= 'BOS')
-#    user_datastore.add_role_to_user('Administrador@fmb.pt', 'Administrador')
-#    user_datastore.create_user(email='visualizador@fmb.pt',
-#                               password='1234',
-#                               name='Viewer Vizualizus',
-#                               phone= 929292922,
-#                               alias= 'VIZ')
-#    user_datastore.add_role_to_user('visualizador@fmb.pt', 'Visualizador')##
-
-#    user_datastore.create_user(email='portageiro@fmb.pt',
-#                               password='1234',
-#                               name= 'Porti Portikus',
-#                               phone= 939393933,
-#                               alias= 'POR')
-#    user_datastore.add_role_to_user('portageiro@fmb.pt', 'Portageiro')
-#    db.session.commit()
-
-#Create debug user
-#@app.before_first_request
-#def create_debug_user():
-#    user_datastore.create_user(email='debug@fmb.pt',
-#                               password='1234',
-#                               name= 'Debugus Maximus',
-#                               phone= 666666666,
-#                               alias= 'DEB')
-#    user_datastore.add_role_to_user('debug@fmb.pt', 'Administrador')
-#    db.session.commit()
 
 #VIEWS
 @app.route('/')

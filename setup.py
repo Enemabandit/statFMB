@@ -28,6 +28,8 @@ setup(
         'bcrypt',
     ],
     entry_points={
-        'console_scripts': ['statFMB=statFMB.run:main'],
+        'console_scripts': ['statFMB=statFMB.run:main',
+                            'statFMB_createdb=statFMB.run:create_db',
+                            'statFMB_create_user=statFMB.run:create_user'],
     }
 )
