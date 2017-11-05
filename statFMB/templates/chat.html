@@ -84,18 +84,21 @@
 <br><br><br><br>
 <div class ="container">
     <div class="row">
-        <div class="col-md-10 col-md-offset-1 col-xs-12">
+        <div class="col-md-8 col-md-offset-1 col-xs-12">
             <div class="msg-wrapper well">
 
+            </div>
+        </div>
+        <div class="col-md-2 col-xs-12">
+            <h5><b>Utilizadores Online:</b></h5>
+            <div class="users-online">
             </div>
         </div>
     </div>
 
     <div class="row">
         <form class="form" action="" method="POST">
-            <input type="hidden" class="user form-control"
-                   value="{{ current_user.name }}"
-                   id="user" placeholder="Nome">
+            <!-- this is allows impersonation, should be changed -->
             <div class="col-md-8 col-md-offset-1 col-xs-12">
                 <div class="form-group">
                     <div class="input-group">
@@ -117,14 +120,14 @@
         </form>
     </div>
 </div>
+
 <script>
- //this needs to be changed on production server
  var socket = io.connect('/')
 
  //broadcast connecting msg
  socket.on('connect', function (){
      socket.emit('chat-login',{
-         user: $('input.user').val(),
+         user: '{{ current_user.name }}',
          msg: "Entrou no chat.",
      })
  })
@@ -132,14 +135,14 @@
  //broadcast disconnect
  socket.on('disconnect',function() {
      socket.emit('chat-logout',{
-         user: $('input.user').val(),
+         user: '{{ current_user.name }}',
          msg: "Entrou no chat.",
      })
  })
 
  var form = $('form').on('submit', function (e){
      e.preventDefault()
-     var user_name = $('input.user').val()
+     var user_name = '{{ current_user.name }}'
      var message = $('input.message').val()
      socket.emit('chat',{
          user: user_name,
@@ -166,6 +169,11 @@
                                      msg.user+':</b> '+
                                      msg.msg+'</div>')
          $('div.msg-wrapper').scrollTop($('div.msg-wrapper')[0].scrollHeight)
+
+         $('div.users-online').empty()
+         for (i=0; i < msg.logged_users.length ; i++) {
+             $('div.users-online').append('<p>' +msg.logged_users[i] +'</p>')
+         }
      }
  })
 
@@ -176,15 +184,24 @@
                                      msg.user+':</b> '+
                                      msg.msg+'</div>')
          $('div.msg-wrapper').scrollTop($('div.msg-wrapper')[0].scrollHeight)
+
+         $('div.users-online').empty()
+         for (i=0; i < msg.logged_users.length ; i++) {
+             $('div.users-online').append('<p>' +msg.logged_users[i] +'</p>')
+         }
      }
  })
 
  //capture disconnect
  $(window).on('unload', function(e){
      socket.emit('chat-logout',{
-         user: $('input.user').val(),
+         user: '{{ current_user.name }}',
          msg: "Saiu."
      })
+     $('div.users-online').empty()
+     for (i=0; i < msg.logged_users.length ; i++) {
+       $('div.users-online').append('<p>' +msg.logged_users[i] +'</p>')
+     }
  });
 
 </script>

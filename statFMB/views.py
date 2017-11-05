@@ -38,6 +38,7 @@ from statFMB.files import  delete_file, copy_to_validated_folder, get_file_path
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 socketio = SocketIO(app)
+socketio.logged_users = []
 
 # Create users to test with
 # @app.before_first_request
@@ -296,7 +297,7 @@ def pendingPdf():
 
     return render_pdf(HTML(string=html),
                       #NOTE: comment this to open the pdf in a new tab
-                      download_filename = filename,
+                      #download_filename = filename,
     )
 
 
@@ -851,9 +852,14 @@ def chat_event(json):
 
 @socketio.on('chat-login')
 def chat_login(json):
+    socketio.logged_users.append(json['user'])
+    json['logged_users'] = socketio.logged_users
+    print(json['logged_users'])
     socketio.emit('login-response',json)
 
 
 @socketio.on('chat-logout')
 def chat_logout(json):
+    socketio.logged_users.remove(json['user'])
+    json['logged_users'] = socketio.logged_users
     socketio.emit('logout-response', json)

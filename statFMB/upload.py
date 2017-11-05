@@ -456,7 +456,9 @@ def format_date(d):
         #return error
         print("error spliting date")
 
-    formated_date = date(int(d_list[2]),int(d_list[1]),int(d_list[0]))
+    formated_date = date(year = int(d_list[2]),
+                         month = int(d_list[1]),
+                         day = int(d_list[0]))
 
     return formated_date
 
